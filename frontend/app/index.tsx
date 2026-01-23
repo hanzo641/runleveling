@@ -17,18 +17,8 @@ import {
   Alert,
   Switch,
   Linking,
+  Animated,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  withSequence,
-  withRepeat,
-  runOnJS,
-  FadeIn,
-  SlideInRight,
-} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
