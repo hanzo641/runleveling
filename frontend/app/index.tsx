@@ -1316,7 +1316,10 @@ export default function Index() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.appTitle}>RunLeveling</Text>
+        <View style={styles.headerLogoContainer}>
+          <Text style={styles.headerTitleRun}>RUN</Text>
+          <Text style={styles.headerTitleLeveling}>LEVELING</Text>
+        </View>
       </View>
 
       {/* Tab Content */}
