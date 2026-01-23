@@ -271,6 +271,11 @@ export default function Index() {
   const xpGainTranslateYAnim = useRef(new Animated.Value(0)).current;
   const xpGainOpacityAnim = useRef(new Animated.Value(0)).current;
   const pulseScaleAnim = useRef(new Animated.Value(1)).current;
+  const runCompleteXpAnim = useRef(new Animated.Value(0)).current;
+  const sparkleOpacity1 = useRef(new Animated.Value(0)).current;
+  const sparkleOpacity2 = useRef(new Animated.Value(0)).current;
+  const sparkleOpacity3 = useRef(new Animated.Value(0)).current;
+  const trophyScaleAnim = useRef(new Animated.Value(0)).current;
   const [progressPercent, setProgressPercent] = useState(0);
 
   // Request permissions
