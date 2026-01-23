@@ -1148,10 +1148,7 @@ export default function Index() {
               setShowSessionDetail(true);
             }}
           >
-            <Animated.View
-              
-              style={styles.historyCard}
-            >
+            <View style={styles.historyCard}>
               <View style={styles.historyHeader}>
                 <View style={styles.historyDate}>
                   <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
