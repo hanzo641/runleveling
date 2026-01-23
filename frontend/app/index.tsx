@@ -356,9 +356,147 @@ export default function Index() {
     }
   }, []);
 
+  // Strava functions
+  const fetchStravaStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/strava/status/${deviceId.current}`);
+      const data = await response.json();
+      setStravaStatus(data);
+    } catch (error) {
+      console.error('Error fetching Strava status:', error);
+    }
+  }, []);
+
+  const connectStrava = async () => {
+    setStravaConnecting(true);
+    try {
+      // Get auth URL from backend
+      const response = await fetch(`${BACKEND_URL}/api/strava/auth-url?device_id=${deviceId.current}`);
+      const data = await response.json();
+      
+      if (data.auth_url) {
+        // Open Strava authorization page
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.auth_url,
+          'runleveling://strava-callback'
+        );
+        
+        if (result.type === 'success' && result.url) {
+          // Extract authorization code from callback URL
+          const url = new URL(result.url);
+          const code = url.searchParams.get('code');
+          
+          if (code) {
+            // Exchange code for token
+            const connectResponse = await fetch(`${BACKEND_URL}/api/strava/connect`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ device_id: deviceId.current, code }),
+            });
+            
+            if (connectResponse.ok) {
+              const connectData = await connectResponse.json();
+              setStravaStatus({
+                connected: true,
+                athlete_name: connectData.athlete_name,
+                athlete_id: connectData.athlete_id,
+              });
+              
+              if (Platform.OS !== 'web') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+              
+              Alert.alert(
+                '🎉 Strava connecté !',
+                `Bienvenue ${connectData.athlete_name} ! Tes activités Strava peuvent maintenant être synchronisées.`,
+                [{ text: 'Synchroniser', onPress: () => syncStravaActivities() }, { text: 'Plus tard' }]
+              );
+            } else {
+              Alert.alert('Erreur', 'Impossible de connecter Strava. Réessaie.');
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error connecting Strava:', error);
+      Alert.alert('Erreur', 'Impossible de connecter Strava. Vérifie ta connexion.');
+    } finally {
+      setStravaConnecting(false);
+    }
+  };
+
+  const disconnectStrava = async () => {
+    Alert.alert(
+      'Déconnecter Strava',
+      'Es-tu sûr de vouloir déconnecter ton compte Strava ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Déconnecter',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await fetch(`${BACKEND_URL}/api/strava/disconnect/${deviceId.current}`, {
+                method: 'DELETE',
+              });
+              setStravaStatus({ connected: false, athlete_name: null, athlete_id: null });
+              
+              if (Platform.OS !== 'web') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              }
+            } catch (error) {
+              console.error('Error disconnecting Strava:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const syncStravaActivities = async () => {
+    setStravaSyncing(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/strava/sync/${deviceId.current}`, {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        const data: StravaSyncResult = await response.json();
+        
+        if (data.activities_synced > 0) {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+          
+          Alert.alert(
+            '✅ Synchronisation réussie !',
+            `${data.activities_synced} activité(s) importée(s)\n+${data.total_xp_earned} XP gagnés !`
+          );
+          
+          // Refresh data
+          fetchProgress();
+          fetchSessions();
+        } else {
+          Alert.alert(
+            'Synchronisation terminée',
+            'Aucune nouvelle activité à importer. Fais une course sur Strava et reviens !'
+          );
+        }
+      } else {
+        Alert.alert('Erreur', 'Impossible de synchroniser les activités Strava.');
+      }
+    } catch (error) {
+      console.error('Error syncing Strava:', error);
+      Alert.alert('Erreur', 'Erreur lors de la synchronisation.');
+    } finally {
+      setStravaSyncing(false);
+    }
+  };
+
   useEffect(() => {
     fetchProgress();
-  }, [fetchProgress]);
+    fetchStravaStatus();
+  }, [fetchProgress, fetchStravaStatus]);
 
   useEffect(() => {
     if (activeTab === 'history') fetchSessions();
