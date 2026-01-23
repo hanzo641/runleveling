@@ -1572,6 +1572,111 @@ export default function Index() {
         </KeyboardAvoidingView>
       </Modal>
 
+      {/* Ranks Modal */}
+      <Modal
+        visible={showRanksModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRanksModal(false)}
+      >
+        <View style={styles.ranksModal}>
+          <View style={styles.ranksHeader}>
+            <Text style={styles.ranksTitle}>Progression des Rangs</Text>
+            <TouchableOpacity onPress={() => setShowRanksModal(false)}>
+              <Ionicons name="close" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.ranksContent} showsVerticalScrollIndicator={false}>
+            <Text style={styles.ranksSubtitle}>
+              Niveau actuel: {progress?.level || 1}
+            </Text>
+
+            {ALL_RANKS.map((rank, index) => {
+              const isUnlocked = (progress?.level || 1) >= rank.min_level;
+              const isCurrent = progress?.rank?.id === rank.id;
+              
+              return (
+                <View 
+                  key={rank.id} 
+                  style={[
+                    styles.rankCard,
+                    isCurrent && styles.rankCardCurrent,
+                    !isUnlocked && styles.rankCardLocked
+                  ]}
+                >
+                  <View style={styles.rankCardLeft}>
+                    <View style={[
+                      styles.rankAvatarContainer,
+                      !isUnlocked && styles.rankAvatarLocked
+                    ]}>
+                      <RankAvatar 
+                        rankId={rank.id} 
+                        size={60} 
+                        showGlow={isCurrent}
+                      />
+                      {!isUnlocked && (
+                        <View style={styles.rankLockOverlay}>
+                          <Ionicons name="lock-closed" size={20} color="#FFFFFF" />
+                        </View>
+                      )}
+                    </View>
+                  </View>
+
+                  <View style={styles.rankCardInfo}>
+                    <View style={styles.rankCardHeader}>
+                      <Text style={[
+                        styles.rankCardName,
+                        { color: isUnlocked ? rank.color : '#6B7280' }
+                      ]}>
+                        {rank.icon} {rank.name}
+                      </Text>
+                      {isCurrent && (
+                        <View style={[styles.currentBadge, { backgroundColor: rank.color }]}>
+                          <Text style={styles.currentBadgeText}>ACTUEL</Text>
+                        </View>
+                      )}
+                    </View>
+                    
+                    <Text style={[
+                      styles.rankCardLevel,
+                      !isUnlocked && styles.rankCardLevelLocked
+                    ]}>
+                      {isUnlocked ? `Débloqué au niveau ${rank.min_level}` : `Niveau ${rank.min_level} requis`}
+                    </Text>
+
+                    {!isUnlocked && (
+                      <View style={styles.rankProgressContainer}>
+                        <View style={styles.rankProgressBar}>
+                          <View 
+                            style={[
+                              styles.rankProgressFill,
+                              { 
+                                width: `${Math.min(100, ((progress?.level || 1) / rank.min_level) * 100)}%`,
+                                backgroundColor: rank.color
+                              }
+                            ]} 
+                          />
+                        </View>
+                        <Text style={styles.rankProgressText}>
+                          {rank.min_level - (progress?.level || 1)} niveaux restants
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+
+            <View style={styles.ranksFooter}>
+              <Text style={styles.ranksFooterText}>
+                Continue à courir pour débloquer de nouveaux rangs ! 🏃‍♂️
+              </Text>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
       {/* Settings Modal */}
       <Modal
         visible={showSettingsModal}
