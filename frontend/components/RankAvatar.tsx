@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated, Easing } from 'react-native';
 import Svg, { 
   Path, 
   Circle, 
@@ -11,15 +11,6 @@ import Svg, {
   RadialGradient,
   Rect
 } from 'react-native-svg';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  withSequence,
-  Easing,
-} from 'react-native-reanimated';
-import { useEffect } from 'react';
 
 interface RankAvatarProps {
   rankId: string;
@@ -27,37 +18,53 @@ interface RankAvatarProps {
   showGlow?: boolean;
 }
 
-const AnimatedView = Animated.createAnimatedComponent(View);
-
 export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankAvatarProps) {
-  const pulseScale = useSharedValue(1);
-  const glowOpacity = useSharedValue(0.5);
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const glowOpacity = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
     if (showGlow && ['champion', 'maitre'].includes(rankId)) {
-      pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.1, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
+      const pulseAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseScale, {
+            toValue: 1.1,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseScale, {
+            toValue: 1,
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
       );
-      glowOpacity.value = withRepeat(
-        withSequence(
-          withTiming(0.8, { duration: 1500 }),
-          withTiming(0.4, { duration: 1500 })
-        ),
-        -1,
-        true
+
+      const glowAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowOpacity, {
+            toValue: 0.8,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowOpacity, {
+            toValue: 0.4,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+        ])
       );
+
+      pulseAnimation.start();
+      glowAnimation.start();
+
+      return () => {
+        pulseAnimation.stop();
+        glowAnimation.stop();
+      };
     }
   }, [rankId, showGlow]);
-
-  const glowStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-    opacity: glowOpacity.value,
-  }));
 
   const renderAvatar = () => {
     switch (rankId) {
@@ -90,7 +97,7 @@ export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankA
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       {showGlow && ['athlete', 'champion', 'maitre'].includes(rankId) && (
-        <AnimatedView 
+        <Animated.View 
           style={[
             styles.glow, 
             { 
@@ -98,8 +105,9 @@ export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankA
               width: size * 1.3,
               height: size * 1.3,
               borderRadius: size * 0.65,
+              transform: [{ scale: pulseScale }],
+              opacity: glowOpacity,
             },
-            glowStyle
           ]} 
         />
       )}
