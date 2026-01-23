@@ -851,21 +851,43 @@ export default function Index() {
     setShowSingleTrophy(false);
     if (runCompleteData?.trophies && currentTrophyIndex < runCompleteData.trophies.length - 1) {
       setCurrentTrophyIndex(prev => prev + 1);
-      setTimeout(() => showNextTrophy(), 300);
+      setTimeout(() => {
+        setShowSingleTrophy(true);
+        trophyScaleAnim.setValue(0);
+        Animated.spring(trophyScaleAnim, {
+          toValue: 1,
+          damping: 8,
+          useNativeDriver: true,
+        }).start();
+      }, 300);
     } else {
-      // All trophies shown, close run complete if needed
+      // All trophies shown, clear data
       setCurrentTrophyIndex(0);
+      setRunCompleteData(null);
     }
   };
 
   const closeRunComplete = () => {
+    // Store trophies before clearing data
+    const trophiesToShow = runCompleteData?.trophies || [];
+    
     setShowRunComplete(false);
-    setRunCompleteData(null);
     
     // Show trophies one by one if any
-    if (runCompleteData?.trophies?.length > 0) {
+    if (trophiesToShow.length > 0) {
+      // Keep runCompleteData for trophy display
       setCurrentTrophyIndex(0);
-      setTimeout(() => showNextTrophy(), 300);
+      setTimeout(() => {
+        setShowSingleTrophy(true);
+        trophyScaleAnim.setValue(0);
+        Animated.spring(trophyScaleAnim, {
+          toValue: 1,
+          damping: 8,
+          useNativeDriver: true,
+        }).start();
+      }, 300);
+    } else {
+      setRunCompleteData(null);
     }
   };
 
