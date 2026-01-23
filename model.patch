@@ -1,80 +1,138 @@
+diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
+index e495112..083bc0c 100644
+--- a/frontend/app/index.tsx
++++ b/frontend/app/index.tsx
+@@ -851,21 +851,43 @@ export default function Index() {
+     setShowSingleTrophy(false);
+     if (runCompleteData?.trophies && currentTrophyIndex < runCompleteData.trophies.length - 1) {
+       setCurrentTrophyIndex(prev => prev + 1);
+-      setTimeout(() => showNextTrophy(), 300);
++      setTimeout(() => {
++        setShowSingleTrophy(true);
++        trophyScaleAnim.setValue(0);
++        Animated.spring(trophyScaleAnim, {
++          toValue: 1,
++          damping: 8,
++          useNativeDriver: true,
++        }).start();
++      }, 300);
+     } else {
+-      // All trophies shown, close run complete if needed
++      // All trophies shown, clear data
+       setCurrentTrophyIndex(0);
++      setRunCompleteData(null);
+     }
+   };
+ 
+   const closeRunComplete = () => {
++    // Store trophies before clearing data
++    const trophiesToShow = runCompleteData?.trophies || [];
++    
+     setShowRunComplete(false);
+-    setRunCompleteData(null);
+     
+     // Show trophies one by one if any
+-    if (runCompleteData?.trophies?.length > 0) {
++    if (trophiesToShow.length > 0) {
++      // Keep runCompleteData for trophy display
+       setCurrentTrophyIndex(0);
+-      setTimeout(() => showNextTrophy(), 300);
++      setTimeout(() => {
++        setShowSingleTrophy(true);
++        trophyScaleAnim.setValue(0);
++        Animated.spring(trophyScaleAnim, {
++          toValue: 1,
++          damping: 8,
++          useNativeDriver: true,
++        }).start();
++      }, 300);
++    } else {
++      setRunCompleteData(null);
+     }
+   };
+ 
 diff --git a/model.patch b/model.patch
-index fa76896..e69de29 100644
+index daa010a..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,75 +0,0 @@
--diff --git a/test_result.md b/test_result.md
--index a92f330..635cb29 100644
----- a/test_result.md
--+++ b/test_result.md
--@@ -120,6 +120,9 @@ backend:
--       - working: true
--         agent: "main"
--         comment: "Endpoint created and tested with curl - returns user progress or creates new one"
--+      - working: true
--+        agent: "testing"
--+        comment: "Comprehensive API testing completed - creates new users with correct defaults (level 1, 0 XP, rank E), returns proper progress structure with all required fields"
-- 
--   - task: "POST /api/session/complete - Complete running session and award XP"
--     implemented: true
--@@ -132,6 +135,9 @@ backend:
--       - working: true
--         agent: "main"
--         comment: "Endpoint tested - correctly calculates XP, handles level ups and rank changes"
--+      - working: true
--+        agent: "testing"
--+        comment: "XP calculation verified: base 50 + 10*minutes works correctly. Level progression tested - 100 XP levels up from 1->2. Rank progression confirmed: E->D at level 11. Session recording works properly"
-- 
--   - task: "GET /api/sessions/{device_id} - Get recent sessions history"
--     implemented: true
--@@ -144,6 +150,9 @@ backend:
--       - working: true
--         agent: "main"
--         comment: "Endpoint created for session history retrieval"
--+      - working: true
--+        agent: "testing"
--+        comment: "Sessions endpoint tested - returns proper array of session objects with all required fields (id, device_id, duration_minutes, xp_earned, level_before, level_after, etc.)"
-- 
--   - task: "GET /api/rank-info - Get rank thresholds and info"
--     implemented: true
--@@ -156,6 +165,21 @@ backend:
--       - working: true
--         agent: "main"
--         comment: "Returns rank information including level thresholds and colors"
--+      - working: true
--+        agent: "testing"
--+        comment: "Rank info endpoint verified - returns correct rank thresholds (E=1, D=11, C=21, B=36, A=51, S=71) and proper structure with names and colors"
--+
--+  - task: "DELETE /api/progress/{device_id} - Reset progress for testing"
--+    implemented: true
--+    working: true
--+    file: "/app/backend/server.py"
--+    stuck_count: 0
--+    priority: "low"
--+    needs_retesting: false
--+    status_history:
--+      - working: true
--+        agent: "testing"
--+        comment: "Reset endpoint tested - properly deletes user progress and sessions, allows clean testing cycles"
-- 
-- frontend:
--   - task: "Main game screen with level display and rank badge"
--@@ -233,7 +257,7 @@ frontend:
-- metadata:
--   created_by: "main_agent"
--   version: "1.0"
---  test_sequence: 1
--+  test_sequence: 2
--   run_ui: false
-- 
-- test_plan:
--@@ -245,4 +269,6 @@ test_plan:
-- 
-- agent_communication:
--   - agent: "main"
---    message: "MVP implementation complete. Backend APIs tested with curl, frontend UI verified with screenshots. All core features working: XP system, level progression, rank system, animations."
--\ No newline at end of file
--+    message: "MVP implementation complete. Backend APIs tested with curl, frontend UI verified with screenshots. All core features working: XP system, level progression, rank system, animations."
--+  - agent: "testing"
--+    message: "Comprehensive backend API testing completed successfully. All 5 endpoints working correctly: progress creation/retrieval, session completion with XP calculation, level progression, rank system (E->D verified), session history, rank info, and progress reset. XP formula (50 + 10*minutes) verified, level thresholds working, rank progression confirmed at correct levels. Created backend_test.py for future testing. All tests passed (8/8)."
--\ No newline at end of file
+@@ -1,80 +0,0 @@
+-diff --git a/model.patch b/model.patch
+-index fa76896..e69de29 100644
+---- a/model.patch
+-+++ b/model.patch
+-@@ -1,75 +0,0 @@
+--diff --git a/test_result.md b/test_result.md
+--index a92f330..635cb29 100644
+----- a/test_result.md
+--+++ b/test_result.md
+--@@ -120,6 +120,9 @@ backend:
+--       - working: true
+--         agent: "main"
+--         comment: "Endpoint created and tested with curl - returns user progress or creates new one"
+--+      - working: true
+--+        agent: "testing"
+--+        comment: "Comprehensive API testing completed - creates new users with correct defaults (level 1, 0 XP, rank E), returns proper progress structure with all required fields"
+-- 
+--   - task: "POST /api/session/complete - Complete running session and award XP"
+--     implemented: true
+--@@ -132,6 +135,9 @@ backend:
+--       - working: true
+--         agent: "main"
+--         comment: "Endpoint tested - correctly calculates XP, handles level ups and rank changes"
+--+      - working: true
+--+        agent: "testing"
+--+        comment: "XP calculation verified: base 50 + 10*minutes works correctly. Level progression tested - 100 XP levels up from 1->2. Rank progression confirmed: E->D at level 11. Session recording works properly"
+-- 
+--   - task: "GET /api/sessions/{device_id} - Get recent sessions history"
+--     implemented: true
+--@@ -144,6 +150,9 @@ backend:
+--       - working: true
+--         agent: "main"
+--         comment: "Endpoint created for session history retrieval"
+--+      - working: true
+--+        agent: "testing"
+--+        comment: "Sessions endpoint tested - returns proper array of session objects with all required fields (id, device_id, duration_minutes, xp_earned, level_before, level_after, etc.)"
+-- 
+--   - task: "GET /api/rank-info - Get rank thresholds and info"
+--     implemented: true
+--@@ -156,6 +165,21 @@ backend:
+--       - working: true
+--         agent: "main"
+--         comment: "Returns rank information including level thresholds and colors"
+--+      - working: true
+--+        agent: "testing"
+--+        comment: "Rank info endpoint verified - returns correct rank thresholds (E=1, D=11, C=21, B=36, A=51, S=71) and proper structure with names and colors"
+--+
+--+  - task: "DELETE /api/progress/{device_id} - Reset progress for testing"
+--+    implemented: true
+--+    working: true
+--+    file: "/app/backend/server.py"
+--+    stuck_count: 0
+--+    priority: "low"
+--+    needs_retesting: false
+--+    status_history:
+--+      - working: true
+--+        agent: "testing"
+--+        comment: "Reset endpoint tested - properly deletes user progress and sessions, allows clean testing cycles"
+-- 
+-- frontend:
+--   - task: "Main game screen with level display and rank badge"
+--@@ -233,7 +257,7 @@ frontend:
+-- metadata:
+--   created_by: "main_agent"
+--   version: "1.0"
+---  test_sequence: 1
+--+  test_sequence: 2
+--   run_ui: false
+-- 
+-- test_plan:
+--@@ -245,4 +269,6 @@ test_plan:
+-- 
+-- agent_communication:
+--   - agent: "main"
+---    message: "MVP implementation complete. Backend APIs tested with curl, frontend UI verified with screenshots. All core features working: XP system, level progression, rank system, animations."
+--\ No newline at end of file
+--+    message: "MVP implementation complete. Backend APIs tested with curl, frontend UI verified with screenshots. All core features working: XP system, level progression, rank system, animations."
+--+  - agent: "testing"
+--+    message: "Comprehensive backend API testing completed successfully. All 5 endpoints working correctly: progress creation/retrieval, session completion with XP calculation, level progression, rank system (E->D verified), session history, rank info, and progress reset. XP formula (50 + 10*minutes) verified, level thresholds working, rank progression confirmed at correct levels. Created backend_test.py for future testing. All tests passed (8/8)."
+--\ No newline at end of file
