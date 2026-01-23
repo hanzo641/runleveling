@@ -120,6 +120,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Endpoint created and tested with curl - returns user progress or creates new one"
+      - working: true
+        agent: "testing"
+        comment: "Comprehensive API testing completed - creates new users with correct defaults (level 1, 0 XP, rank E), returns proper progress structure with all required fields"
 
   - task: "POST /api/session/complete - Complete running session and award XP"
     implemented: true
@@ -132,6 +135,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Endpoint tested - correctly calculates XP, handles level ups and rank changes"
+      - working: true
+        agent: "testing"
+        comment: "XP calculation verified: base 50 + 10*minutes works correctly. Level progression tested - 100 XP levels up from 1->2. Rank progression confirmed: E->D at level 11. Session recording works properly"
 
   - task: "GET /api/sessions/{device_id} - Get recent sessions history"
     implemented: true
@@ -144,6 +150,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Endpoint created for session history retrieval"
+      - working: true
+        agent: "testing"
+        comment: "Sessions endpoint tested - returns proper array of session objects with all required fields (id, device_id, duration_minutes, xp_earned, level_before, level_after, etc.)"
 
   - task: "GET /api/rank-info - Get rank thresholds and info"
     implemented: true
@@ -156,6 +165,21 @@ backend:
       - working: true
         agent: "main"
         comment: "Returns rank information including level thresholds and colors"
+      - working: true
+        agent: "testing"
+        comment: "Rank info endpoint verified - returns correct rank thresholds (E=1, D=11, C=21, B=36, A=51, S=71) and proper structure with names and colors"
+
+  - task: "DELETE /api/progress/{device_id} - Reset progress for testing"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Reset endpoint tested - properly deletes user progress and sessions, allows clean testing cycles"
 
 frontend:
   - task: "Main game screen with level display and rank badge"
