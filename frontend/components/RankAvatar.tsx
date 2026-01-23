@@ -9,7 +9,8 @@ import Svg, {
   Stop, 
   RadialGradient,
   Line,
-  Ellipse
+  Ellipse,
+  Rect
 } from 'react-native-svg';
 
 interface RankAvatarProps {
@@ -28,7 +29,7 @@ export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankA
       const pulseAnimation = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseScale, {
-            toValue: 1.08,
+            toValue: 1.1,
             duration: 1500,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
@@ -45,13 +46,13 @@ export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankA
       const glowAnimation = Animated.loop(
         Animated.sequence([
           Animated.timing(glowOpacity, {
-            toValue: 0.8,
-            duration: 1500,
+            toValue: 0.9,
+            duration: 1200,
             useNativeDriver: true,
           }),
           Animated.timing(glowOpacity, {
             toValue: 0.4,
-            duration: 1500,
+            duration: 1200,
             useNativeDriver: true,
           }),
         ])
@@ -59,19 +60,6 @@ export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankA
 
       pulseAnimation.start();
       glowAnimation.start();
-
-      // Rotation for Maître aura
-      if (rankId === 'maitre') {
-        const rotateAnimation = Animated.loop(
-          Animated.timing(rotateAnim, {
-            toValue: 1,
-            duration: 8000,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          })
-        );
-        rotateAnimation.start();
-      }
 
       return () => {
         pulseAnimation.stop();
@@ -108,43 +96,18 @@ export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankA
     }
   };
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg']
-  });
-
   return (
     <View style={[styles.container, { width: size, height: size }]}>
-      {/* Aura for Maître */}
-      {showGlow && rankId === 'maitre' && (
-        <Animated.View 
-          style={[
-            styles.auraRing, 
-            { 
-              width: size * 1.4,
-              height: size * 1.4,
-              borderRadius: size * 0.7,
-              transform: [{ rotate: spin }],
-              opacity: glowOpacity,
-            },
-          ]} 
-        >
-          <View style={[styles.auraSegment, styles.auraSegment1, { backgroundColor: '#EF4444' }]} />
-          <View style={[styles.auraSegment, styles.auraSegment2, { backgroundColor: '#F59E0B' }]} />
-          <View style={[styles.auraSegment, styles.auraSegment3, { backgroundColor: '#FCD34D' }]} />
-        </Animated.View>
-      )}
-      
-      {/* Glow effect */}
-      {showGlow && ['athlete', 'champion'].includes(rankId) && (
+      {/* Glow for higher ranks */}
+      {showGlow && ['athlete', 'champion', 'maitre'].includes(rankId) && (
         <Animated.View 
           style={[
             styles.glow, 
             { 
               backgroundColor: getGlowColor(),
-              width: size * 1.3,
-              height: size * 1.3,
-              borderRadius: size * 0.65,
+              width: size * 1.4,
+              height: size * 1.4,
+              borderRadius: size * 0.7,
               transform: [{ scale: pulseScale }],
               opacity: glowOpacity,
             },
@@ -156,131 +119,9 @@ export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankA
   );
 }
 
-// Base runner body - used by all ranks
-const RunnerBody = ({ 
-  size, 
-  bodyColor, 
-  lean = 0, 
-  armSwing = 0,
-  showSpeedLines = false,
-  showCrown = false,
-  crownColor = '#F59E0B',
-  showAura = false,
-}: { 
-  size: number; 
-  bodyColor: string;
-  lean?: number;
-  armSwing?: number;
-  showSpeedLines?: boolean;
-  showCrown?: boolean;
-  crownColor?: string;
-  showAura?: boolean;
-}) => {
-  const scale = size / 100;
-  
-  return (
-    <G transform={`rotate(${lean}, 50, 50)`}>
-      {/* Speed lines for Athlète+ */}
-      {showSpeedLines && (
-        <G opacity={0.6}>
-          <Line x1="15" y1="35" x2="5" y2="35" stroke={bodyColor} strokeWidth="2" strokeLinecap="round" />
-          <Line x1="18" y1="45" x2="3" y2="45" stroke={bodyColor} strokeWidth="2.5" strokeLinecap="round" />
-          <Line x1="15" y1="55" x2="5" y2="55" stroke={bodyColor} strokeWidth="2" strokeLinecap="round" />
-          <Line x1="20" y1="65" x2="8" y2="65" stroke={bodyColor} strokeWidth="1.5" strokeLinecap="round" />
-        </G>
-      )}
-      
-      {/* Crown for Champion */}
-      {showCrown && (
-        <G>
-          <Path 
-            d="M38 18 L42 8 L50 14 L58 8 L62 18 Z" 
-            fill={crownColor}
-            stroke="#FFFFFF"
-            strokeWidth="1"
-          />
-          <Circle cx="50" cy="11" r="2.5" fill="#EF4444" />
-        </G>
-      )}
-      
-      {/* Head */}
-      <Circle cx="50" cy="28" r="10" fill={bodyColor} />
-      
-      {/* Neck */}
-      <Path 
-        d="M47 37 L53 37 L53 40 L47 40 Z" 
-        fill={bodyColor}
-      />
-      
-      {/* Torso - athletic build */}
-      <Path 
-        d="M38 40 
-           C38 40 36 42 36 50 
-           L36 58 
-           C36 60 38 62 42 62 
-           L58 62 
-           C62 62 64 60 64 58 
-           L64 50 
-           C64 42 62 40 62 40 
-           Z" 
-        fill={bodyColor}
-      />
-      
-      {/* Shoulders - more defined for higher ranks */}
-      <Ellipse cx="34" cy="44" rx="5" ry="4" fill={bodyColor} />
-      <Ellipse cx="66" cy="44" rx="5" ry="4" fill={bodyColor} />
-      
-      {/* Left Arm - back swing */}
-      <Path 
-        d={`M34 44 
-            Q${28 - armSwing} ${50 + armSwing} ${25 - armSwing} ${58 + armSwing}`}
-        stroke={bodyColor}
-        strokeWidth="7"
-        strokeLinecap="round"
-        fill="none"
-      />
-      
-      {/* Right Arm - forward swing */}
-      <Path 
-        d={`M66 44 
-            Q${72 + armSwing} ${48 - armSwing} ${78 + armSwing} ${42 - armSwing}`}
-        stroke={bodyColor}
-        strokeWidth="7"
-        strokeLinecap="round"
-        fill="none"
-      />
-      
-      {/* Hips */}
-      <Ellipse cx="50" cy="65" rx="12" ry="6" fill={bodyColor} />
-      
-      {/* Left Leg - back */}
-      <Path 
-        d="M42 65 Q35 75 28 88"
-        stroke={bodyColor}
-        strokeWidth="9"
-        strokeLinecap="round"
-        fill="none"
-      />
-      
-      {/* Right Leg - forward */}
-      <Path 
-        d="M58 65 Q68 72 75 78"
-        stroke={bodyColor}
-        strokeWidth="9"
-        strokeLinecap="round"
-        fill="none"
-      />
-      
-      {/* Left Foot */}
-      <Ellipse cx="26" cy="90" rx="6" ry="3" fill={bodyColor} />
-      
-      {/* Right Foot */}
-      <Ellipse cx="77" cy="80" rx="6" ry="3" fill={bodyColor} />
-    </G>
-  );
-};
-
-// Débutant - Simple, straight posture, relaxed
+// ============================================
+// DÉBUTANT - Posture droite, marche tranquille
+// ============================================
 const DebutantAvatar = ({ size }: { size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -288,37 +129,75 @@ const DebutantAvatar = ({ size }: { size: number }) => (
         <Stop offset="0%" stopColor="#4B5563" />
         <Stop offset="100%" stopColor="#374151" />
       </LinearGradient>
+      <LinearGradient id="debutantBody" x1="0%" y1="0%" x2="100%" y2="100%">
+        <Stop offset="0%" stopColor="#9CA3AF" />
+        <Stop offset="100%" stopColor="#6B7280" />
+      </LinearGradient>
     </Defs>
-    <Circle cx="50" cy="50" r="48" fill="url(#debutantBg)" />
     
-    {/* Simple standing runner */}
+    {/* Background */}
+    <Circle cx="50" cy="50" r="46" fill="url(#debutantBg)" />
+    
+    {/* Runner - Standing/Walking pose */}
     <G>
       {/* Head */}
-      <Circle cx="50" cy="25" r="9" fill="#6B7280" />
+      <Circle cx="50" cy="22" r="8" fill="url(#debutantBody)" />
       
-      {/* Body - straight */}
+      {/* Neck */}
+      <Rect x="47" y="29" width="6" height="5" fill="url(#debutantBody)" rx="2" />
+      
+      {/* Torso */}
       <Path 
-        d="M44 34 L44 55 L56 55 L56 34 Z" 
-        fill="#6B7280"
-        rx="3"
+        d="M42 34 L42 54 Q42 58 46 58 L54 58 Q58 58 58 54 L58 34 Q58 32 54 32 L46 32 Q42 32 42 34" 
+        fill="url(#debutantBody)"
       />
       
-      {/* Arms - relaxed down */}
-      <Path d="M44 36 L38 52" stroke="#6B7280" strokeWidth="6" strokeLinecap="round" />
-      <Path d="M56 36 L62 52" stroke="#6B7280" strokeWidth="6" strokeLinecap="round" />
+      {/* Left arm - relaxed */}
+      <Path 
+        d="M42 36 Q38 42 36 52" 
+        stroke="url(#debutantBody)" 
+        strokeWidth="5" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Legs - standing */}
-      <Path d="M46 55 L44 78" stroke="#6B7280" strokeWidth="7" strokeLinecap="round" />
-      <Path d="M54 55 L56 78" stroke="#6B7280" strokeWidth="7" strokeLinecap="round" />
+      {/* Right arm - relaxed */}
+      <Path 
+        d="M58 36 Q62 42 64 52" 
+        stroke="url(#debutantBody)" 
+        strokeWidth="5" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Feet */}
-      <Ellipse cx="43" cy="80" rx="5" ry="3" fill="#6B7280" />
-      <Ellipse cx="57" cy="80" rx="5" ry="3" fill="#6B7280" />
+      {/* Left leg */}
+      <Path 
+        d="M46 58 Q44 68 42 80" 
+        stroke="url(#debutantBody)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Right leg */}
+      <Path 
+        d="M54 58 Q56 68 58 80" 
+        stroke="url(#debutantBody)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Shoes */}
+      <Ellipse cx="41" cy="82" rx="5" ry="3" fill="#4B5563" />
+      <Ellipse cx="59" cy="82" rx="5" ry="3" fill="#4B5563" />
     </G>
   </Svg>
 );
 
-// Jogger - Slight lean forward, starting to run
+// ============================================
+// JOGGER - Inclinaison avant, début de course
+// ============================================
 const JoggerAvatar = ({ size }: { size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -326,36 +205,75 @@ const JoggerAvatar = ({ size }: { size: number }) => (
         <Stop offset="0%" stopColor="#10B981" />
         <Stop offset="100%" stopColor="#059669" />
       </LinearGradient>
+      <LinearGradient id="joggerBody" x1="0%" y1="0%" x2="100%" y2="100%">
+        <Stop offset="0%" stopColor="#FFFFFF" />
+        <Stop offset="100%" stopColor="#E5E7EB" />
+      </LinearGradient>
     </Defs>
-    <Circle cx="50" cy="50" r="48" fill="url(#joggerBg)" />
     
-    {/* Runner with slight lean */}
-    <G transform="rotate(8, 50, 70)">
+    {/* Background */}
+    <Circle cx="50" cy="50" r="46" fill="url(#joggerBg)" />
+    
+    {/* Runner - Light jog, slight lean */}
+    <G transform="rotate(5, 50, 80)">
       {/* Head */}
-      <Circle cx="50" cy="24" r="9" fill="#FFFFFF" />
+      <Circle cx="50" cy="20" r="8" fill="url(#joggerBody)" />
       
-      {/* Body - slight lean */}
+      {/* Neck */}
+      <Rect x="47" y="27" width="6" height="5" fill="url(#joggerBody)" rx="2" />
+      
+      {/* Torso - slight lean */}
       <Path 
-        d="M43 33 L43 54 L57 54 L57 33 Z" 
-        fill="#FFFFFF"
+        d="M41 32 L40 52 Q40 56 44 56 L56 56 Q60 56 60 52 L59 32 Q58 30 54 30 L46 30 Q42 30 41 32" 
+        fill="url(#joggerBody)"
       />
       
-      {/* Arms - slight movement */}
-      <Path d="M43 35 L32 48" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
-      <Path d="M57 35 L68 45" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
+      {/* Left arm - back swing */}
+      <Path 
+        d="M41 34 Q34 42 30 50" 
+        stroke="url(#joggerBody)" 
+        strokeWidth="5" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Legs - jogging pose */}
-      <Path d="M45 54 L38 76" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" />
-      <Path d="M55 54 L65 72" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" />
+      {/* Right arm - forward swing */}
+      <Path 
+        d="M59 34 Q66 38 70 44" 
+        stroke="url(#joggerBody)" 
+        strokeWidth="5" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Feet */}
-      <Ellipse cx="36" cy="78" rx="5" ry="3" fill="#FFFFFF" />
-      <Ellipse cx="67" cy="74" rx="5" ry="3" fill="#FFFFFF" />
+      {/* Left leg - back */}
+      <Path 
+        d="M44 56 Q36 66 30 78" 
+        stroke="url(#joggerBody)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Right leg - forward */}
+      <Path 
+        d="M56 56 Q64 64 70 74" 
+        stroke="url(#joggerBody)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Shoes */}
+      <Ellipse cx="28" cy="80" rx="5" ry="3" fill="#10B981" />
+      <Ellipse cx="72" cy="76" rx="5" ry="3" fill="#10B981" />
     </G>
   </Svg>
 );
 
-// Coureur - Dynamic arms, more athletic
+// ============================================
+// COUREUR - Bras dynamiques, vraie course
+// ============================================
 const CoureurAvatar = ({ size }: { size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -363,40 +281,79 @@ const CoureurAvatar = ({ size }: { size: number }) => (
         <Stop offset="0%" stopColor="#3B82F6" />
         <Stop offset="100%" stopColor="#1D4ED8" />
       </LinearGradient>
+      <LinearGradient id="coureurBody" x1="0%" y1="0%" x2="100%" y2="100%">
+        <Stop offset="0%" stopColor="#FFFFFF" />
+        <Stop offset="100%" stopColor="#E5E7EB" />
+      </LinearGradient>
     </Defs>
-    <Circle cx="50" cy="50" r="48" fill="url(#coureurBg)" />
     
-    {/* Dynamic runner */}
-    <G transform="rotate(12, 50, 70)">
+    {/* Background */}
+    <Circle cx="50" cy="50" r="46" fill="url(#coureurBg)" />
+    
+    {/* Runner - Dynamic running pose */}
+    <G transform="rotate(10, 50, 80)">
       {/* Head */}
-      <Circle cx="50" cy="22" r="9" fill="#FFFFFF" />
+      <Circle cx="50" cy="18" r="8" fill="url(#coureurBody)" />
       
-      {/* Athletic body */}
+      {/* Neck */}
+      <Rect x="47" y="25" width="6" height="4" fill="url(#coureurBody)" rx="2" />
+      
+      {/* Torso - athletic */}
       <Path 
-        d="M42 31 C40 33 40 38 40 45 L40 52 C40 54 42 56 46 56 L54 56 C58 56 60 54 60 52 L60 45 C60 38 60 33 58 31 Z" 
-        fill="#FFFFFF"
+        d="M40 29 L38 50 Q38 54 43 54 L57 54 Q62 54 62 50 L60 29 Q59 27 54 27 L46 27 Q41 27 40 29" 
+        fill="url(#coureurBody)"
       />
       
-      {/* Shoulders more defined */}
-      <Ellipse cx="38" cy="35" rx="4" ry="3" fill="#FFFFFF" />
-      <Ellipse cx="62" cy="35" rx="4" ry="3" fill="#FFFFFF" />
+      {/* Shoulders slightly broader */}
+      <Ellipse cx="38" cy="31" rx="3" ry="2" fill="url(#coureurBody)" />
+      <Ellipse cx="62" cy="31" rx="3" ry="2" fill="url(#coureurBody)" />
       
-      {/* Arms - dynamic swing */}
-      <Path d="M38 35 Q28 45 22 52" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
-      <Path d="M62 35 Q72 32 78 28" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
+      {/* Left arm - strong back swing */}
+      <Path 
+        d="M38 32 Q28 44 22 54" 
+        stroke="url(#coureurBody)" 
+        strokeWidth="5" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Legs - running pose */}
-      <Path d="M44 56 Q35 68 28 82" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" />
-      <Path d="M56 56 Q68 65 76 70" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" />
+      {/* Right arm - powerful forward */}
+      <Path 
+        d="M62 32 Q72 30 78 34" 
+        stroke="url(#coureurBody)" 
+        strokeWidth="5" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Feet */}
-      <Ellipse cx="26" cy="84" rx="5" ry="3" fill="#FFFFFF" />
-      <Ellipse cx="78" cy="72" rx="5" ry="3" fill="#FFFFFF" />
+      {/* Left leg - extended back */}
+      <Path 
+        d="M43 54 Q30 66 20 82" 
+        stroke="url(#coureurBody)" 
+        strokeWidth="7" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Right leg - driving forward */}
+      <Path 
+        d="M57 54 Q70 60 80 68" 
+        stroke="url(#coureurBody)" 
+        strokeWidth="7" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Shoes */}
+      <Ellipse cx="18" cy="84" rx="6" ry="3" fill="#3B82F6" />
+      <Ellipse cx="82" cy="70" rx="6" ry="3" fill="#3B82F6" />
     </G>
   </Svg>
 );
 
-// Athlète - Speed lines, powerful build
+// ============================================
+// ATHLÈTE - Épaules larges, lignes de vitesse
+// ============================================
 const AthleteAvatar = ({ size }: { size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -404,52 +361,92 @@ const AthleteAvatar = ({ size }: { size: number }) => (
         <Stop offset="0%" stopColor="#8B5CF6" />
         <Stop offset="100%" stopColor="#6D28D9" />
       </LinearGradient>
+      <LinearGradient id="athleteBody" x1="0%" y1="0%" x2="100%" y2="100%">
+        <Stop offset="0%" stopColor="#FFFFFF" />
+        <Stop offset="100%" stopColor="#E5E7EB" />
+      </LinearGradient>
       <RadialGradient id="athleteGlow" cx="50%" cy="50%" r="50%">
-        <Stop offset="0%" stopColor="#A78BFA" stopOpacity="0.3" />
-        <Stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+        <Stop offset="60%" stopColor="transparent" />
+        <Stop offset="100%" stopColor="#A78BFA" stopOpacity="0.3" />
       </RadialGradient>
     </Defs>
-    <Circle cx="50" cy="50" r="48" fill="url(#athleteBg)" />
-    <Circle cx="50" cy="50" r="45" fill="url(#athleteGlow)" />
+    
+    {/* Background */}
+    <Circle cx="50" cy="50" r="46" fill="url(#athleteBg)" />
+    <Circle cx="50" cy="50" r="44" fill="url(#athleteGlow)" />
     
     {/* Speed lines */}
     <G opacity={0.7}>
-      <Line x1="12" y1="35" x2="4" y2="35" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
-      <Line x1="14" y1="45" x2="2" y2="45" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
-      <Line x1="12" y1="55" x2="4" y2="55" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+      <Line x1="14" y1="30" x2="6" y2="30" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+      <Line x1="12" y1="40" x2="2" y2="40" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+      <Line x1="14" y1="50" x2="4" y2="50" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+      <Line x1="16" y1="60" x2="8" y2="60" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
     </G>
     
-    {/* Powerful runner */}
-    <G transform="rotate(15, 50, 70)">
+    {/* Runner - Powerful sprint */}
+    <G transform="rotate(12, 50, 80)">
       {/* Head */}
-      <Circle cx="50" cy="20" r="9" fill="#FFFFFF" />
+      <Circle cx="50" cy="16" r="8" fill="url(#athleteBody)" />
       
-      {/* Muscular body */}
+      {/* Neck - thicker */}
+      <Rect x="46" y="23" width="8" height="5" fill="url(#athleteBody)" rx="2" />
+      
+      {/* Torso - more muscular */}
       <Path 
-        d="M40 29 C38 31 37 36 37 43 L37 50 C37 52 39 55 44 55 L56 55 C61 55 63 52 63 50 L63 43 C63 36 62 31 60 29 Z" 
-        fill="#FFFFFF"
+        d="M38 28 L36 50 Q36 54 42 54 L58 54 Q64 54 64 50 L62 28 Q61 26 54 26 L46 26 Q39 26 38 28" 
+        fill="url(#athleteBody)"
       />
       
       {/* Broad shoulders */}
-      <Ellipse cx="35" cy="33" rx="5" ry="4" fill="#FFFFFF" />
-      <Ellipse cx="65" cy="33" rx="5" ry="4" fill="#FFFFFF" />
+      <Ellipse cx="35" cy="30" rx="4" ry="3" fill="url(#athleteBody)" />
+      <Ellipse cx="65" cy="30" rx="4" ry="3" fill="url(#athleteBody)" />
       
-      {/* Powerful arms */}
-      <Path d="M35 33 Q22 45 18 55" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" />
-      <Path d="M65 33 Q78 28 85 22" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" />
+      {/* Left arm - powerful back swing */}
+      <Path 
+        d="M35 30 Q22 44 16 56" 
+        stroke="url(#athleteBody)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Strong legs */}
-      <Path d="M42 55 Q30 70 22 85" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" />
-      <Path d="M58 55 Q72 62 82 68" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" />
+      {/* Right arm - explosive forward */}
+      <Path 
+        d="M65 30 Q78 24 86 26" 
+        stroke="url(#athleteBody)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Feet */}
-      <Ellipse cx="20" cy="87" rx="6" ry="3" fill="#FFFFFF" />
-      <Ellipse cx="84" cy="70" rx="6" ry="3" fill="#FFFFFF" />
+      {/* Left leg - powerful push */}
+      <Path 
+        d="M42 54 Q26 68 14 86" 
+        stroke="url(#athleteBody)" 
+        strokeWidth="8" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Right leg - driving stride */}
+      <Path 
+        d="M58 54 Q74 58 88 64" 
+        stroke="url(#athleteBody)" 
+        strokeWidth="8" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Performance shoes */}
+      <Ellipse cx="12" cy="88" rx="6" ry="3" fill="#8B5CF6" />
+      <Ellipse cx="90" cy="66" rx="6" ry="3" fill="#8B5CF6" />
     </G>
   </Svg>
 );
 
-// Champion - Golden glow, subtle crown
+// ============================================
+// CHAMPION - Glow doré, couronne subtile
+// ============================================
 const ChampionAvatar = ({ size }: { size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -457,69 +454,112 @@ const ChampionAvatar = ({ size }: { size: number }) => (
         <Stop offset="0%" stopColor="#F59E0B" />
         <Stop offset="100%" stopColor="#D97706" />
       </LinearGradient>
+      <LinearGradient id="championBody" x1="0%" y1="0%" x2="100%" y2="100%">
+        <Stop offset="0%" stopColor="#FFFFFF" />
+        <Stop offset="100%" stopColor="#FEF3C7" />
+      </LinearGradient>
       <LinearGradient id="goldShine" x1="0%" y1="0%" x2="100%" y2="100%">
         <Stop offset="0%" stopColor="#FEF3C7" />
         <Stop offset="50%" stopColor="#FCD34D" />
         <Stop offset="100%" stopColor="#F59E0B" />
       </LinearGradient>
       <RadialGradient id="championGlow" cx="50%" cy="50%" r="50%">
-        <Stop offset="0%" stopColor="#FCD34D" stopOpacity="0.4" />
-        <Stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+        <Stop offset="50%" stopColor="transparent" />
+        <Stop offset="100%" stopColor="#FCD34D" stopOpacity="0.4" />
       </RadialGradient>
     </Defs>
-    <Circle cx="50" cy="50" r="48" fill="url(#championBg)" />
-    <Circle cx="50" cy="50" r="45" fill="url(#championGlow)" />
     
-    {/* Speed lines */}
+    {/* Background */}
+    <Circle cx="50" cy="50" r="46" fill="url(#championBg)" />
+    <Circle cx="50" cy="50" r="44" fill="url(#championGlow)" />
+    
+    {/* Speed lines - golden */}
     <G opacity={0.8}>
-      <Line x1="10" y1="32" x2="2" y2="32" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
-      <Line x1="12" y1="42" x2="1" y2="42" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
-      <Line x1="10" y1="52" x2="2" y2="52" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+      <Line x1="12" y1="28" x2="4" y2="28" stroke="#FEF3C7" strokeWidth="2" strokeLinecap="round" />
+      <Line x1="10" y1="38" x2="1" y2="38" stroke="#FEF3C7" strokeWidth="2.5" strokeLinecap="round" />
+      <Line x1="12" y1="48" x2="3" y2="48" stroke="#FEF3C7" strokeWidth="2" strokeLinecap="round" />
     </G>
     
-    {/* Champion runner */}
-    <G transform="rotate(15, 50, 70)">
+    {/* Runner - Champion elite */}
+    <G transform="rotate(14, 50, 80)">
       {/* Crown */}
-      <Path 
-        d="M36 12 L40 4 L50 10 L60 4 L64 12 Z" 
-        fill="url(#goldShine)"
-      />
-      <Circle cx="50" cy="7" r="2" fill="#FFFFFF" />
+      <G>
+        <Path 
+          d="M38 10 L42 2 L50 8 L58 2 L62 10 L58 12 L50 8 L42 12 Z" 
+          fill="url(#goldShine)"
+        />
+        <Circle cx="42" cy="6" r="1.5" fill="#FFFFFF" />
+        <Circle cx="50" cy="4" r="2" fill="#FFFFFF" />
+        <Circle cx="58" cy="6" r="1.5" fill="#FFFFFF" />
+      </G>
       
       {/* Head */}
-      <Circle cx="50" cy="20" r="9" fill="#FFFFFF" />
+      <Circle cx="50" cy="18" r="8" fill="url(#championBody)" />
       
-      {/* Champion body */}
+      {/* Neck */}
+      <Rect x="46" y="25" width="8" height="5" fill="url(#championBody)" rx="2" />
+      
+      {/* Elite torso */}
       <Path 
-        d="M39 29 C37 31 36 36 36 43 L36 50 C36 52 38 55 43 55 L57 55 C62 55 64 52 64 50 L64 43 C64 36 63 31 61 29 Z" 
-        fill="#FFFFFF"
+        d="M37 30 L34 52 Q34 56 41 56 L59 56 Q66 56 66 52 L63 30 Q62 28 54 28 L46 28 Q38 28 37 30" 
+        fill="url(#championBody)"
       />
       
       {/* Champion shoulders */}
-      <Ellipse cx="34" cy="33" rx="5" ry="4" fill="#FFFFFF" />
-      <Ellipse cx="66" cy="33" rx="5" ry="4" fill="#FFFFFF" />
+      <Ellipse cx="34" cy="32" rx="5" ry="3" fill="url(#championBody)" />
+      <Ellipse cx="66" cy="32" rx="5" ry="3" fill="url(#championBody)" />
       
-      {/* Champion arms */}
-      <Path d="M34 33 Q20 45 15 56" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" />
-      <Path d="M66 33 Q80 26 88 18" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" />
+      {/* Left arm */}
+      <Path 
+        d="M34 32 Q18 48 12 60" 
+        stroke="url(#championBody)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Champion legs */}
-      <Path d="M41 55 Q28 70 18 86" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" />
-      <Path d="M59 55 Q74 62 86 66" stroke="#FFFFFF" strokeWidth="9" strokeLinecap="round" />
+      {/* Right arm */}
+      <Path 
+        d="M66 32 Q82 22 90 20" 
+        stroke="url(#championBody)" 
+        strokeWidth="6" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Golden feet */}
-      <Ellipse cx="16" cy="88" rx="6" ry="3" fill="url(#goldShine)" />
-      <Ellipse cx="88" cy="68" rx="6" ry="3" fill="url(#goldShine)" />
+      {/* Left leg */}
+      <Path 
+        d="M41 56 Q22 72 10 90" 
+        stroke="url(#championBody)" 
+        strokeWidth="8" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Right leg */}
+      <Path 
+        d="M59 56 Q78 58 94 62" 
+        stroke="url(#championBody)" 
+        strokeWidth="8" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Golden shoes */}
+      <Ellipse cx="8" cy="92" rx="6" ry="3" fill="url(#goldShine)" />
+      <Ellipse cx="96" cy="64" rx="6" ry="3" fill="url(#goldShine)" />
     </G>
     
     {/* Sparkles */}
-    <Circle cx="18" cy="22" r="2" fill="#FEF3C7" />
-    <Circle cx="82" cy="32" r="1.5" fill="#FEF3C7" />
-    <Circle cx="85" cy="50" r="2" fill="#FEF3C7" />
+    <Circle cx="20" cy="18" r="2" fill="#FEF3C7" />
+    <Circle cx="80" cy="24" r="2" fill="#FEF3C7" />
+    <Circle cx="88" cy="44" r="1.5" fill="#FEF3C7" />
   </Svg>
 );
 
-// Maître - Animated aura, legendary status
+// ============================================
+// MAÎTRE - Aura légendaire, effets de feu
+// ============================================
 const MaitreAvatar = ({ size }: { size: number }) => (
   <Svg width={size} height={size} viewBox="0 0 100 100">
     <Defs>
@@ -527,79 +567,121 @@ const MaitreAvatar = ({ size }: { size: number }) => (
         <Stop offset="0%" stopColor="#EF4444" />
         <Stop offset="100%" stopColor="#B91C1C" />
       </LinearGradient>
+      <LinearGradient id="maitreBody" x1="0%" y1="0%" x2="100%" y2="100%">
+        <Stop offset="0%" stopColor="#FFFFFF" />
+        <Stop offset="100%" stopColor="#FEE2E2" />
+      </LinearGradient>
       <LinearGradient id="fireGrad" x1="0%" y1="100%" x2="0%" y2="0%">
         <Stop offset="0%" stopColor="#F59E0B" />
         <Stop offset="50%" stopColor="#EF4444" />
         <Stop offset="100%" stopColor="#FCD34D" />
       </LinearGradient>
-      <RadialGradient id="maitreGlow" cx="50%" cy="50%" r="50%">
-        <Stop offset="0%" stopColor="#FCD34D" stopOpacity="0.5" />
-        <Stop offset="50%" stopColor="#EF4444" stopOpacity="0.3" />
-        <Stop offset="100%" stopColor="#EF4444" stopOpacity="0" />
+      <RadialGradient id="maitreAura" cx="50%" cy="50%" r="50%">
+        <Stop offset="40%" stopColor="transparent" />
+        <Stop offset="70%" stopColor="#F59E0B" stopOpacity="0.2" />
+        <Stop offset="100%" stopColor="#EF4444" stopOpacity="0.4" />
       </RadialGradient>
     </Defs>
-    <Circle cx="50" cy="50" r="48" fill="url(#maitreBg)" />
-    <Circle cx="50" cy="50" r="46" fill="url(#maitreGlow)" />
+    
+    {/* Background */}
+    <Circle cx="50" cy="50" r="46" fill="url(#maitreBg)" />
+    <Circle cx="50" cy="50" r="44" fill="url(#maitreAura)" />
     
     {/* Fire aura lines */}
     <G opacity={0.9}>
-      <Path d="M8 30 Q5 25 10 22" stroke="#FCD34D" strokeWidth="2" fill="none" />
-      <Path d="M6 42 Q2 38 8 35" stroke="#F59E0B" strokeWidth="2" fill="none" />
-      <Path d="M8 54 Q4 50 10 48" stroke="#EF4444" strokeWidth="2" fill="none" />
+      <Path d="M10 26 Q6 22 12 18" stroke="#FCD34D" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <Path d="M8 38 Q3 34 10 30" stroke="#F59E0B" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <Path d="M10 50 Q4 46 12 42" stroke="#EF4444" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <Path d="M12 62 Q6 58 14 54" stroke="#F59E0B" strokeWidth="2" fill="none" strokeLinecap="round" />
     </G>
     
-    {/* Legendary runner */}
-    <G transform="rotate(18, 50, 70)">
-      {/* Fire crown */}
+    {/* Runner - Legendary master */}
+    <G transform="rotate(15, 50, 80)">
+      {/* Fire crown aura */}
       <Path 
-        d="M30 14 Q35 0 42 10 Q48 -2 50 8 Q52 -2 58 10 Q65 0 70 14" 
+        d="M32 8 Q38 -4 44 6 Q48 -6 50 4 Q52 -6 56 6 Q62 -4 68 8" 
         fill="url(#fireGrad)"
+        opacity={0.8}
       />
       
       {/* Majestic crown */}
-      <Path 
-        d="M34 14 L38 6 L50 12 L62 6 L66 14 Z" 
-        fill="#FCD34D"
-      />
-      <Circle cx="42" cy="9" r="2" fill="#EF4444" />
-      <Circle cx="50" cy="6" r="2.5" fill="#EF4444" />
-      <Circle cx="58" cy="9" r="2" fill="#EF4444" />
+      <G>
+        <Path 
+          d="M36 10 L40 0 L50 7 L60 0 L64 10 L60 12 L50 6 L40 12 Z" 
+          fill="#FCD34D"
+          stroke="#FFFFFF"
+          strokeWidth="0.5"
+        />
+        <Circle cx="40" cy="5" r="2" fill="#EF4444" />
+        <Circle cx="50" cy="2" r="2.5" fill="#EF4444" />
+        <Circle cx="60" cy="5" r="2" fill="#EF4444" />
+      </G>
       
       {/* Head */}
-      <Circle cx="50" cy="22" r="9" fill="#FFFFFF" />
+      <Circle cx="50" cy="18" r="8" fill="url(#maitreBody)" />
       
-      {/* Legendary body */}
+      {/* Neck */}
+      <Rect x="45" y="25" width="10" height="5" fill="url(#maitreBody)" rx="2" />
+      
+      {/* Legendary torso */}
       <Path 
-        d="M38 31 C36 33 35 38 35 45 L35 52 C35 54 37 57 42 57 L58 57 C63 57 65 54 65 52 L65 45 C65 38 64 33 62 31 Z" 
-        fill="#FFFFFF"
+        d="M35 30 L32 54 Q32 58 40 58 L60 58 Q68 58 68 54 L65 30 Q64 28 54 28 L46 28 Q36 28 35 30" 
+        fill="url(#maitreBody)"
       />
       
       {/* Powerful shoulders */}
-      <Ellipse cx="33" cy="35" rx="6" ry="4" fill="#FFFFFF" />
-      <Ellipse cx="67" cy="35" rx="6" ry="4" fill="#FFFFFF" />
+      <Ellipse cx="32" cy="32" rx="6" ry="4" fill="url(#maitreBody)" />
+      <Ellipse cx="68" cy="32" rx="6" ry="4" fill="url(#maitreBody)" />
       
-      {/* Legendary arms */}
-      <Path d="M33 35 Q18 48 12 60" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" />
-      <Path d="M67 35 Q82 25 92 15" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" />
+      {/* Left arm with fire */}
+      <Path 
+        d="M32 32 Q14 50 6 64" 
+        stroke="url(#maitreBody)" 
+        strokeWidth="7" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      <Circle cx="4" cy="66" r="5" fill="url(#fireGrad)" />
       
-      {/* Fire hands */}
-      <Circle cx="10" cy="62" r="5" fill="url(#fireGrad)" />
-      <Circle cx="94" cy="13" r="5" fill="url(#fireGrad)" />
+      {/* Right arm with fire */}
+      <Path 
+        d="M68 32 Q86 18 96 14" 
+        stroke="url(#maitreBody)" 
+        strokeWidth="7" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      <Circle cx="98" cy="12" r="5" fill="url(#fireGrad)" />
       
-      {/* Legendary legs */}
-      <Path d="M40 57 Q25 72 14 90" stroke="#FFFFFF" strokeWidth="10" strokeLinecap="round" />
-      <Path d="M60 57 Q76 64 90 68" stroke="#FFFFFF" strokeWidth="10" strokeLinecap="round" />
+      {/* Left leg */}
+      <Path 
+        d="M40 58 Q18 76 4 96" 
+        stroke="url(#maitreBody)" 
+        strokeWidth="9" 
+        strokeLinecap="round" 
+        fill="none"
+      />
       
-      {/* Fire feet */}
-      <Ellipse cx="12" cy="92" rx="7" ry="4" fill="url(#fireGrad)" />
-      <Ellipse cx="92" cy="70" rx="7" ry="4" fill="url(#fireGrad)" />
+      {/* Right leg */}
+      <Path 
+        d="M60 58 Q82 58 100 60" 
+        stroke="url(#maitreBody)" 
+        strokeWidth="9" 
+        strokeLinecap="round" 
+        fill="none"
+      />
+      
+      {/* Fire shoes */}
+      <Ellipse cx="2" cy="98" rx="7" ry="4" fill="url(#fireGrad)" />
+      <Ellipse cx="102" cy="62" rx="7" ry="4" fill="url(#fireGrad)" />
     </G>
     
     {/* Fire particles */}
-    <Circle cx="15" cy="18" r="2" fill="#FCD34D" />
-    <Circle cx="85" cy="28" r="2.5" fill="#F59E0B" />
-    <Circle cx="90" cy="48" r="2" fill="#EF4444" />
-    <Circle cx="12" cy="70" r="1.5" fill="#FCD34D" />
+    <Circle cx="16" cy="14" r="2.5" fill="#FCD34D" />
+    <Circle cx="84" cy="20" r="2" fill="#F59E0B" />
+    <Circle cx="92" cy="38" r="2.5" fill="#EF4444" />
+    <Circle cx="88" cy="54" r="2" fill="#FCD34D" />
+    <Circle cx="8" cy="74" r="2" fill="#F59E0B" />
   </Svg>
 );
 
@@ -610,29 +692,5 @@ const styles = StyleSheet.create({
   },
   glow: {
     position: 'absolute',
-  },
-  auraRing: {
-    position: 'absolute',
-    borderWidth: 3,
-    borderColor: 'transparent',
-  },
-  auraSegment: {
-    position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  auraSegment1: {
-    top: 0,
-    left: '50%',
-    marginLeft: -4,
-  },
-  auraSegment2: {
-    bottom: '25%',
-    right: 0,
-  },
-  auraSegment3: {
-    bottom: '25%',
-    left: 0,
   },
 });
