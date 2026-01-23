@@ -2026,6 +2026,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  intensityInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#2D2D2D',
+    borderRadius: 10,
+    marginBottom: 8,
+    borderLeftWidth: 4,
+    gap: 12,
+  },
+  intensityInfoText: {
+    flex: 1,
+  },
+  intensityRuleText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  intensityMultiplier: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  intensityNote: {
+    fontSize: 11,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 12,
+    fontStyle: 'italic',
+  },
   sessionDetailModal: {
     flex: 1,
     backgroundColor: '#0F0F0F',
