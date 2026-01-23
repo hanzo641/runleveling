@@ -474,16 +474,10 @@ export default function Index() {
     });
   };
 
-  const startSession = () => {
+  const startSession = async () => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    setShowIntensityPicker(true);
-  };
-
-  const confirmStartSession = async (intensity: string) => {
-    setSelectedIntensity(intensity);
-    setShowIntensityPicker(false);
     
     // Reset GPS data
     setCurrentDistance(0);
@@ -504,6 +498,15 @@ export default function Index() {
     buttonScale.value = withSequence(withSpring(0.9), withSpring(1));
   };
 
+  // Calculate intensity from pace (for display during session)
+  const getCurrentIntensity = () => {
+    if (currentPace <= 0) return null;
+    if (currentPace < 300) return INTENSITY_OPTIONS[3]; // Extrême < 5:00
+    if (currentPace < 360) return INTENSITY_OPTIONS[2]; // Intense 5:00-6:00
+    if (currentPace < 420) return INTENSITY_OPTIONS[1]; // Modéré 6:00-7:00
+    return INTENSITY_OPTIONS[0]; // Léger > 7:00
+  };
+
   const completeSession = async () => {
     if (Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -519,7 +522,16 @@ export default function Index() {
     const minPace = paces.length > 0 ? Math.min(...paces) : 0; // Best pace
     const maxPaceVal = paces.length > 0 ? Math.max(...paces) : 0; // Worst pace
     const avgSpeed = currentDistance > 0 && sessionDuration > 0 ? (currentDistance / sessionDuration) * 3600 : 0;
-    const calories = estimateCalories(durationMinutes, currentDistance, selectedIntensity);
+    
+    // Estimate calories based on calculated intensity
+    let estimatedIntensity = 'moderate';
+    if (avgPace > 0) {
+      if (avgPace < 300) estimatedIntensity = 'extreme';
+      else if (avgPace < 360) estimatedIntensity = 'intense';
+      else if (avgPace < 420) estimatedIntensity = 'moderate';
+      else estimatedIntensity = 'light';
+    }
+    const calories = estimateCalories(durationMinutes, currentDistance, estimatedIntensity);
 
     // Simplify route for storage (every 10th point)
     const simplifiedRoute = routePoints.filter((_, i) => i % 10 === 0).map(p => ({
@@ -535,7 +547,6 @@ export default function Index() {
           device_id: deviceId.current,
           duration_minutes: durationMinutes,
           duration_seconds: durationSeconds,
-          intensity: selectedIntensity,
           distance_km: currentDistance,
           avg_pace_seconds: avgPace,
           max_pace_seconds: minPace, // Best pace (lowest time)
