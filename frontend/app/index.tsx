@@ -1595,6 +1595,76 @@ export default function Index() {
                 {locationPermission ? 'Activé' : 'Désactivé'}
               </Text>
             </View>
+
+            {/* Strava Integration */}
+            <View style={styles.stravaSectionDivider}>
+              <Text style={styles.stravaSectionTitle}>Intégrations</Text>
+            </View>
+
+            <View style={styles.stravaSection}>
+              <View style={styles.stravaHeader}>
+                <View style={styles.stravaLogo}>
+                  <Text style={styles.stravaLogoText}>STRAVA</Text>
+                </View>
+                {stravaStatus.connected && (
+                  <View style={styles.stravaConnectedBadge}>
+                    <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                    <Text style={styles.stravaConnectedText}>Connecté</Text>
+                  </View>
+                )}
+              </View>
+
+              {stravaStatus.connected ? (
+                <View style={styles.stravaConnectedContainer}>
+                  <Text style={styles.stravaAthleteName}>
+                    {stravaStatus.athlete_name || 'Athlète Strava'}
+                  </Text>
+                  
+                  <View style={styles.stravaButtonsRow}>
+                    <TouchableOpacity 
+                      style={styles.stravaSyncButton}
+                      onPress={syncStravaActivities}
+                      disabled={stravaSyncing}
+                    >
+                      {stravaSyncing ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <Ionicons name="sync" size={18} color="#FFFFFF" />
+                          <Text style={styles.stravaSyncButtonText}>Synchroniser</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                      style={styles.stravaDisconnectButton}
+                      onPress={disconnectStrava}
+                    >
+                      <Ionicons name="log-out-outline" size={18} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity 
+                  style={styles.stravaConnectButton}
+                  onPress={connectStrava}
+                  disabled={stravaConnecting}
+                >
+                  {stravaConnecting ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="link" size={20} color="#FFFFFF" />
+                      <Text style={styles.stravaConnectButtonText}>Connecter Strava</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+
+              <Text style={styles.stravaDescription}>
+                Importe automatiquement tes courses Strava et gagne de l'XP !
+              </Text>
+            </View>
           </View>
         </View>
       </Modal>
