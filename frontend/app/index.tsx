@@ -237,6 +237,11 @@ export default function Index() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState('08:00');
 
+  // Strava state
+  const [stravaStatus, setStravaStatus] = useState<StravaStatus>({ connected: false, athlete_name: null, athlete_id: null });
+  const [stravaSyncing, setStravaSyncing] = useState(false);
+  const [stravaConnecting, setStravaConnecting] = useState(false);
+
   // GPS tracking state
   const [locationPermission, setLocationPermission] = useState(false);
   const [currentDistance, setCurrentDistance] = useState(0);
