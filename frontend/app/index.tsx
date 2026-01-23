@@ -905,7 +905,19 @@ export default function Index() {
       {/* XP Progress Bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBackground}>
-          <Animated.View style={[styles.progressFill, { backgroundColor: rankColor, width: progressWidthAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }) }]} />
+          <Animated.View 
+            style={[
+              styles.progressFill, 
+              { 
+                backgroundColor: rankColor, 
+                width: progressWidthAnim.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ['0%', '100%'],
+                  extrapolate: 'clamp'
+                })
+              }
+            ]} 
+          />
         </View>
         <View style={styles.xpTextContainer}>
           <Text style={styles.xpText}>
