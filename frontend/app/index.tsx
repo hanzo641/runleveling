@@ -1115,34 +1115,43 @@ export default function Index() {
         ))}
       </View>
 
-      {/* Intensity Picker Modal */}
+      {/* Intensity Info Modal */}
       <Modal
-        visible={showIntensityPicker}
+        visible={showIntensityInfo}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowIntensityPicker(false)}
+        onRequestClose={() => setShowIntensityInfo(false)}
       >
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setShowIntensityPicker(false)}
+          onPress={() => setShowIntensityInfo(false)}
         >
           <View style={styles.intensityModal}>
-            <Text style={styles.intensityModalTitle}>Choisis l'intensité</Text>
-            <Text style={styles.intensityModalSubtitle}>Plus c'est intense, plus tu gagnes d'XP!</Text>
+            <Text style={styles.intensityModalTitle}>Intensité Automatique</Text>
+            <Text style={styles.intensityModalSubtitle}>Basée sur ton allure moyenne</Text>
 
             {INTENSITY_OPTIONS.map((intensity) => (
-              <TouchableOpacity
+              <View
                 key={intensity.id}
-                style={[styles.intensityOption, { borderColor: intensity.color }]}
-                onPress={() => confirmStartSession(intensity.id)}
+                style={[styles.intensityInfoRow, { borderLeftColor: intensity.color }]}
               >
-                <Ionicons name={intensity.icon as any} size={28} color={intensity.color} />
-                <Text style={[styles.intensityOptionText, { color: intensity.color }]}>
-                  {intensity.name}
+                <Ionicons name={intensity.icon as any} size={24} color={intensity.color} />
+                <View style={styles.intensityInfoText}>
+                  <Text style={[styles.intensityOptionText, { color: intensity.color }]}>
+                    {intensity.name}
+                  </Text>
+                  <Text style={styles.intensityRuleText}>{intensity.rule}</Text>
+                </View>
+                <Text style={[styles.intensityMultiplier, { color: intensity.color }]}>
+                  x{intensity.id === 'light' ? '0.5' : intensity.id === 'moderate' ? '1.0' : intensity.id === 'intense' ? '1.5' : '2.0'}
                 </Text>
-              </TouchableOpacity>
+              </View>
             ))}
+
+            <Text style={styles.intensityNote}>
+              L'intensité est calculée à la fin de ta course selon ton allure moyenne !
+            </Text>
           </View>
         </TouchableOpacity>
       </Modal>
