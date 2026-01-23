@@ -973,7 +973,7 @@ export default function Index() {
 
       {/* Main Action Button */}
       <View style={styles.buttonContainer}>
-        <Animated.View style={[pulseAnimatedStyle, buttonAnimatedStyle]}>
+        <Animated.View style={{ transform: [{ scale: pulseScaleAnim }, { scale: buttonScaleAnim }] }}>
           <TouchableOpacity
             style={[
               styles.actionButton,
