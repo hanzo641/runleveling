@@ -223,6 +223,7 @@ export default function Index() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSessionDetail, setShowSessionDetail] = useState(false);
   const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
+  const [showRanksModal, setShowRanksModal] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState('08:00');
