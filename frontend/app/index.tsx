@@ -779,11 +779,13 @@ export default function Index() {
           <View style={styles.timerContainer}>
             <Ionicons name="timer-outline" size={24} color="#6366F1" />
             <Text style={styles.timerText}>{formatDuration(sessionDuration)}</Text>
-            <View style={[styles.intensityBadge, { backgroundColor: INTENSITY_OPTIONS.find(i => i.id === selectedIntensity)?.color }]}>
-              <Text style={styles.intensityBadgeText}>
-                {INTENSITY_OPTIONS.find(i => i.id === selectedIntensity)?.name}
-              </Text>
-            </View>
+            {getCurrentIntensity() && (
+              <View style={[styles.intensityBadge, { backgroundColor: getCurrentIntensity()?.color }]}>
+                <Text style={styles.intensityBadgeText}>
+                  {getCurrentIntensity()?.name}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       )}
