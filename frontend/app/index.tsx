@@ -695,13 +695,14 @@ export default function Index() {
   // Render Home Tab
   const renderHomeTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      {/* Rank Badge */}
+      {/* Avatar & Rank */}
       <View style={styles.rankContainer}>
-        <TouchableOpacity
-          style={[styles.rankBadge, { backgroundColor: rankColor }]}
-          onPress={() => setShowUsernameModal(true)}
-        >
-          <Text style={styles.rankIcon}>{progress?.rank?.icon || '🏃'}</Text>
+        <TouchableOpacity onPress={() => setShowUsernameModal(true)}>
+          <RankAvatar 
+            rankId={progress?.rank?.id || 'debutant'} 
+            size={90} 
+            showGlow={true}
+          />
         </TouchableOpacity>
         <Text style={[styles.rankName, { color: rankColor }]}>
           {progress?.rank?.name || 'Débutant'}
