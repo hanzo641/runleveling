@@ -580,26 +580,47 @@ export default function Index() {
     }
   };
 
+  // Pulse animation for running state
+  useEffect(() => {
+    let pulseAnimation: Animated.CompositeAnimation | null = null;
+    
+    if (isRunning) {
+      pulseAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseScaleAnim, {
+            toValue: 1.05,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseScaleAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulseAnimation.start();
+    } else {
+      pulseScaleAnim.setValue(1);
+    }
+    
+    return () => {
+      if (pulseAnimation) {
+        pulseAnimation.stop();
+      }
+    };
+  }, [isRunning]);
+
   // Timer for running session
   useEffect(() => {
     if (isRunning) {
       timerRef.current = setInterval(() => {
         setSessionDuration((prev) => prev + 1);
       }, 1000);
-
-      pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.05, { duration: 1000 }),
-          withTiming(1, { duration: 1000 })
-        ),
-        -1,
-        true
-      );
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-      pulseScale.value = withTiming(1);
     }
 
     return () => {
