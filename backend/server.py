@@ -378,7 +378,6 @@ class CompleteSessionInput(BaseModel):
     device_id: str
     duration_minutes: int
     duration_seconds: int = 0
-    intensity: str = 'moderate'
     # GPS data
     distance_km: float = 0
     avg_pace_seconds: float = 0
