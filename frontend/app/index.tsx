@@ -29,6 +29,16 @@ import RankAvatar from '../components/RankAvatar';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
+// All ranks data
+const ALL_RANKS = [
+  { id: 'debutant', name: 'Débutant', min_level: 1, color: '#6B7280', icon: '🏃' },
+  { id: 'jogger', name: 'Jogger', min_level: 11, color: '#10B981', icon: '🏃‍♂️' },
+  { id: 'coureur', name: 'Coureur', min_level: 26, color: '#3B82F6', icon: '🏅' },
+  { id: 'athlete', name: 'Athlète', min_level: 46, color: '#8B5CF6', icon: '💪' },
+  { id: 'champion', name: 'Champion', min_level: 71, color: '#F59E0B', icon: '🏆' },
+  { id: 'maitre', name: 'Maître', min_level: 91, color: '#EF4444', icon: '👑' },
+];
+
 // Configure notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
