@@ -671,7 +671,10 @@ export default function Index() {
     
     setIsRunning(true);
     setSessionDuration(0);
-    buttonScale.value = withSequence(withSpring(0.9), withSpring(1));
+    Animated.sequence([
+      Animated.spring(buttonScaleAnim, { toValue: 0.9, useNativeDriver: true }),
+      Animated.spring(buttonScaleAnim, { toValue: 1, useNativeDriver: true }),
+    ]).start();
   };
 
   // Calculate intensity from pace (for display during session)
