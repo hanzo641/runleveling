@@ -1212,8 +1212,7 @@ export default function Index() {
         keyExtractor={(item) => `${item.rank}-${item.username}`}
         showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => (
-          <Animated.View
-            
+          <View
             style={[
               styles.leaderboardCard,
               item.is_current_user && styles.leaderboardCardCurrentUser
@@ -1246,7 +1245,7 @@ export default function Index() {
             </View>
 
             <Text style={styles.leaderboardXp}>{item.total_xp}</Text>
-          </Animated.View>
+          </View>
         )}
         ListEmptyComponent={
           <View style={styles.emptyState}>
