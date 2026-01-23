@@ -1038,7 +1038,7 @@ export default function Index() {
       {progress?.daily_quests?.map((quest, index) => (
         <Animated.View
           key={quest.id}
-          entering={SlideInRight.delay(index * 100)}
+          
           style={[
             styles.questCard,
             quest.completed && styles.questCardCompleted
@@ -1097,7 +1097,7 @@ export default function Index() {
           {allTrophies.unlocked.map((trophy, index) => (
             <Animated.View
               key={trophy.id}
-              entering={FadeIn.delay(index * 50)}
+              
               style={[styles.trophyCard, styles.trophyUnlocked]}
             >
               <Text style={styles.trophyIcon}>{trophy.icon}</Text>
@@ -1151,7 +1151,7 @@ export default function Index() {
             }}
           >
             <Animated.View
-              entering={SlideInRight.delay(index * 50)}
+              
               style={styles.historyCard}
             >
               <View style={styles.historyHeader}>
@@ -1218,7 +1218,7 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => (
           <Animated.View
-            entering={SlideInRight.delay(index * 30)}
+            
             style={[
               styles.leaderboardCard,
               item.is_current_user && styles.leaderboardCardCurrentUser
