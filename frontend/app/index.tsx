@@ -161,10 +161,10 @@ interface LocationPoint {
 }
 
 const INTENSITY_OPTIONS = [
-  { id: 'light', name: 'Léger', icon: 'walk-outline', color: '#10B981' },
-  { id: 'moderate', name: 'Modéré', icon: 'fitness-outline', color: '#3B82F6' },
-  { id: 'intense', name: 'Intense', icon: 'flame-outline', color: '#F59E0B' },
-  { id: 'extreme', name: 'Extrême', icon: 'flash-outline', color: '#EF4444' },
+  { id: 'light', name: 'Léger', icon: 'walk-outline', color: '#10B981', rule: '> 7:00/km' },
+  { id: 'moderate', name: 'Modéré', icon: 'fitness-outline', color: '#3B82F6', rule: '6:00 - 7:00/km' },
+  { id: 'intense', name: 'Intense', icon: 'flame-outline', color: '#F59E0B', rule: '5:00 - 6:00/km' },
+  { id: 'extreme', name: 'Extrême', icon: 'flash-outline', color: '#EF4444', rule: '< 5:00/km' },
 ];
 
 type TabType = 'home' | 'quests' | 'trophies' | 'history' | 'leaderboard';
