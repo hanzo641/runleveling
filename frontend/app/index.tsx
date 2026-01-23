@@ -887,12 +887,15 @@ export default function Index() {
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {/* Avatar & Rank */}
       <View style={styles.rankContainer}>
-        <TouchableOpacity onPress={() => setShowUsernameModal(true)}>
+        <TouchableOpacity onPress={() => setShowRanksModal(true)}>
           <RankAvatar 
             rankId={progress?.rank?.id || 'debutant'} 
             size={90} 
             showGlow={true}
           />
+          <View style={styles.avatarHint}>
+            <Ionicons name="chevron-up" size={14} color="#9CA3AF" />
+          </View>
         </TouchableOpacity>
         <Text style={[styles.rankName, { color: rankColor }]}>
           {progress?.rank?.name || 'Débutant'}
