@@ -309,7 +309,12 @@ export default function Index() {
       setProgress(data);
       setNotificationsEnabled(data.notification_enabled);
       setNotificationTime(data.notification_time);
-      progressWidth.value = withTiming(data.progress_percentage, { duration: 800 });
+      setProgressPercent(data.progress_percentage);
+      Animated.timing(progressWidthAnim, {
+        toValue: data.progress_percentage,
+        duration: 800,
+        useNativeDriver: false,
+      }).start();
     } catch (error) {
       console.error('Error fetching progress:', error);
     } finally {
