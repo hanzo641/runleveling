@@ -62,6 +62,19 @@ def get_duration_multiplier(minutes: int) -> float:
     else:
         return 1.8  # Long sessions more rewarding
 
+# Distance bonus multiplier
+def get_distance_multiplier(distance_km: float) -> float:
+    if distance_km < 1:
+        return 0.9
+    elif distance_km < 3:
+        return 1.0
+    elif distance_km < 5:
+        return 1.1
+    elif distance_km < 10:
+        return 1.2
+    else:
+        return 1.3
+
 # Running/Sports themed ranks
 RANKS = [
     {'id': 'debutant', 'name': 'Débutant', 'min_level': 1, 'color': '#6B7280', 'icon': '🏃'},
@@ -98,6 +111,12 @@ TROPHIES = [
     {'id': 'hour_10', 'name': 'Endurant', 'description': 'Cours 10 heures au total', 'condition': 'total_minutes_600', 'xp_reward': 500, 'icon': '🕐'},
     {'id': 'hour_50', 'name': 'Marathonien', 'description': 'Cours 50 heures au total', 'condition': 'total_minutes_3000', 'xp_reward': 1500, 'icon': '🏃‍♀️'},
     
+    # Distance trophies
+    {'id': 'distance_10', 'name': 'Premiers 10km', 'description': 'Cours 10 km au total', 'condition': 'total_distance_10', 'xp_reward': 150, 'icon': '📍'},
+    {'id': 'distance_50', 'name': 'Explorateur', 'description': 'Cours 50 km au total', 'condition': 'total_distance_50', 'xp_reward': 400, 'icon': '🗺️'},
+    {'id': 'distance_100', 'name': 'Centurion', 'description': 'Cours 100 km au total', 'condition': 'total_distance_100', 'xp_reward': 800, 'icon': '💯'},
+    {'id': 'distance_marathon', 'name': 'Marathon', 'description': 'Cours 42.195 km en une session', 'condition': 'single_distance_42', 'xp_reward': 2000, 'icon': '🏅'},
+    
     # Intensity trophies
     {'id': 'first_intense', 'name': 'Guerrier', 'description': 'Complète une session intense', 'condition': 'intensity_intense', 'xp_reward': 75, 'icon': '🔥'},
     {'id': 'first_extreme', 'name': 'Sans Limite', 'description': 'Complète une session extrême', 'condition': 'intensity_extreme', 'xp_reward': 150, 'icon': '💥'},
@@ -105,6 +124,10 @@ TROPHIES = [
     # Streak trophies
     {'id': 'streak_7', 'name': 'Semaine Parfaite', 'description': '7 jours de suite', 'condition': 'streak_7', 'xp_reward': 300, 'icon': '🔥'},
     {'id': 'streak_30', 'name': 'Mois de Fer', 'description': '30 jours de suite', 'condition': 'streak_30', 'xp_reward': 1000, 'icon': '💎'},
+    
+    # Speed trophies
+    {'id': 'speed_5', 'name': 'Rapide', 'description': 'Atteins une allure de 5 min/km', 'condition': 'pace_5', 'xp_reward': 200, 'icon': '⚡'},
+    {'id': 'speed_4', 'name': 'Éclair', 'description': 'Atteins une allure de 4 min/km', 'condition': 'pace_4', 'xp_reward': 500, 'icon': '🌩️'},
 ]
 
 # Quest templates
@@ -117,6 +140,9 @@ QUEST_TEMPLATES = [
     {'id': 'intense_1', 'name': 'Pousse Toi', 'description': 'Complète une session intense ou extrême', 'type': 'intensity', 'target': 'intense', 'xp_reward': 60},
     {'id': 'long_20', 'name': 'Longue Sortie', 'description': 'Fais une session de 20+ minutes', 'type': 'single_duration', 'target': 20, 'xp_reward': 50},
     {'id': 'long_45', 'name': 'Ultra Session', 'description': 'Fais une session de 45+ minutes', 'type': 'single_duration', 'target': 45, 'xp_reward': 120},
+    {'id': 'distance_3', 'name': 'Les 3 Bornes', 'description': 'Cours 3 km en une session', 'type': 'single_distance', 'target': 3, 'xp_reward': 60},
+    {'id': 'distance_5', 'name': 'Le 5K', 'description': 'Cours 5 km en une session', 'type': 'single_distance', 'target': 5, 'xp_reward': 100},
+    {'id': 'distance_10', 'name': 'Le 10K', 'description': 'Cours 10 km en une session', 'type': 'single_distance', 'target': 10, 'xp_reward': 200},
 ]
 
 # ============== HELPER FUNCTIONS ==============
@@ -141,14 +167,20 @@ def get_xp_for_level(level: int) -> int:
     """Calculate XP needed to reach next level"""
     return int(BASE_XP * (XP_GROWTH_RATE ** (level - 1)))
 
-def calculate_session_xp(duration_minutes: int, intensity: str) -> int:
-    """Calculate XP earned from a session based on duration and intensity"""
+def calculate_session_xp(duration_minutes: int, intensity: str, distance_km: float = 0) -> int:
+    """Calculate XP earned from a session based on duration, intensity and distance"""
     base_xp_per_minute = 8  # Base XP per minute
     intensity_mult = INTENSITY_MULTIPLIERS.get(intensity, 1.0)
     duration_mult = get_duration_multiplier(duration_minutes)
+    distance_mult = get_distance_multiplier(distance_km) if distance_km > 0 else 1.0
     
-    xp = int(duration_minutes * base_xp_per_minute * intensity_mult * duration_mult)
-    return max(10, xp)  # Minimum 10 XP
+    xp = int(duration_minutes * base_xp_per_minute * intensity_mult * duration_mult * distance_mult)
+    
+    # Bonus XP for distance
+    if distance_km > 0:
+        xp += int(distance_km * 10)  # 10 XP per km
+    
+    return max(10, xp)
 
 def generate_daily_quests() -> List[dict]:
     """Generate 3 random daily quests"""
@@ -168,7 +200,15 @@ def generate_daily_quests() -> List[dict]:
         })
     return quests
 
-def check_trophy_condition(trophy: dict, progress: dict) -> bool:
+def format_pace(pace_seconds_per_km: float) -> str:
+    """Format pace as mm:ss/km"""
+    if pace_seconds_per_km <= 0:
+        return "--:--"
+    minutes = int(pace_seconds_per_km // 60)
+    seconds = int(pace_seconds_per_km % 60)
+    return f"{minutes}:{seconds:02d}"
+
+def check_trophy_condition(trophy: dict, progress: dict, session_data: dict = None) -> bool:
     """Check if a trophy condition is met"""
     condition = trophy['condition']
     
@@ -184,15 +224,36 @@ def check_trophy_condition(trophy: dict, progress: dict) -> bool:
     elif condition.startswith('total_minutes_'):
         target = int(condition.split('_')[2])
         return progress['total_duration_minutes'] >= target
+    elif condition.startswith('total_distance_'):
+        target = int(condition.split('_')[2])
+        return progress.get('total_distance_km', 0) >= target
+    elif condition.startswith('single_distance_'):
+        target = int(condition.split('_')[2])
+        if session_data:
+            return session_data.get('distance_km', 0) >= target
+        return False
     elif condition.startswith('intensity_'):
         intensity = condition.split('_')[1]
         return intensity in progress.get('intensities_completed', [])
     elif condition.startswith('streak_'):
         target = int(condition.split('_')[1])
         return progress.get('current_streak', 0) >= target
+    elif condition.startswith('pace_'):
+        target = int(condition.split('_')[1])
+        if session_data and session_data.get('max_pace_seconds', 0) > 0:
+            max_pace_min = session_data['max_pace_seconds'] / 60
+            return max_pace_min <= target
+        return False
     return False
 
 # ============== MODELS ==============
+
+class LocationPoint(BaseModel):
+    latitude: float
+    longitude: float
+    altitude: Optional[float] = None
+    speed: Optional[float] = None  # m/s
+    timestamp: datetime
 
 class UserProgress(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -204,6 +265,7 @@ class UserProgress(BaseModel):
     rank_id: str = 'debutant'
     sessions_completed: int = 0
     total_duration_minutes: int = 0
+    total_distance_km: float = 0
     current_streak: int = 0
     best_streak: int = 0
     last_session_date: Optional[str] = None
@@ -211,6 +273,9 @@ class UserProgress(BaseModel):
     intensities_completed: List[str] = Field(default_factory=list)
     daily_quests: List[dict] = Field(default_factory=list)
     quests_last_reset: Optional[str] = None
+    best_pace_seconds: Optional[float] = None  # Best pace ever (seconds per km)
+    notification_enabled: bool = True
+    notification_time: str = "08:00"  # Default reminder time
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -226,16 +291,21 @@ class UserProgressResponse(BaseModel):
     next_rank: Optional[dict]
     sessions_completed: int
     total_duration_minutes: int
+    total_distance_km: float
     current_streak: int
     best_streak: int
     progress_percentage: float
     trophies_unlocked: List[str]
     daily_quests: List[dict]
+    best_pace: Optional[str]
+    notification_enabled: bool
+    notification_time: str
 
 class Session(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     device_id: str
     duration_minutes: int
+    duration_seconds: int = 0
     intensity: str
     intensity_name: str
     xp_earned: int
@@ -245,13 +315,37 @@ class Session(BaseModel):
     rank_before: str
     rank_after: str
     ranked_up: bool
+    # GPS data
+    distance_km: float = 0
+    avg_pace_seconds: float = 0  # seconds per km
+    max_pace_seconds: float = 0  # best pace (lowest time per km)
+    min_pace_seconds: float = 0  # worst pace (highest time per km)
+    avg_speed_kmh: float = 0
+    max_speed_kmh: float = 0
+    elevation_gain: float = 0  # meters
+    elevation_loss: float = 0  # meters
+    calories_burned: int = 0
+    # Route
+    route_points: List[dict] = Field(default_factory=list)  # Simplified route for display
     started_at: datetime
     completed_at: datetime = Field(default_factory=datetime.utcnow)
 
 class CompleteSessionInput(BaseModel):
     device_id: str
     duration_minutes: int
+    duration_seconds: int = 0
     intensity: str = 'moderate'
+    # GPS data
+    distance_km: float = 0
+    avg_pace_seconds: float = 0
+    max_pace_seconds: float = 0
+    min_pace_seconds: float = 0
+    avg_speed_kmh: float = 0
+    max_speed_kmh: float = 0
+    elevation_gain: float = 0
+    elevation_loss: float = 0
+    calories_burned: int = 0
+    route_points: List[dict] = Field(default_factory=list)
 
 class SessionResponse(BaseModel):
     session: Session
@@ -265,6 +359,27 @@ class SessionResponse(BaseModel):
     trophies_earned: List[dict]
     quests_completed: List[dict]
 
+class SessionDetailResponse(BaseModel):
+    id: str
+    duration_minutes: int
+    duration_seconds: int
+    intensity: str
+    intensity_name: str
+    xp_earned: int
+    distance_km: float
+    avg_pace: str
+    max_pace: str
+    min_pace: str
+    avg_speed_kmh: float
+    max_speed_kmh: float
+    elevation_gain: float
+    elevation_loss: float
+    calories_burned: int
+    leveled_up: bool
+    level_after: int
+    completed_at: str
+    route_points: List[dict]
+
 class LeaderboardEntry(BaseModel):
     rank: int
     username: str
@@ -272,11 +387,17 @@ class LeaderboardEntry(BaseModel):
     total_xp: int
     player_rank: dict
     sessions_completed: int
+    total_distance_km: float
     is_current_user: bool = False
 
 class UpdateUsernameInput(BaseModel):
     device_id: str
     username: str
+
+class UpdateNotificationInput(BaseModel):
+    device_id: str
+    enabled: bool
+    time: str = "08:00"
 
 # ============== HELPER TO CREATE RESPONSE ==============
 
@@ -284,6 +405,10 @@ def create_progress_response(progress: UserProgress) -> UserProgressResponse:
     xp_needed = get_xp_for_level(progress.level)
     current_rank = get_rank_for_level(progress.level)
     next_rank = get_next_rank(current_rank['id'])
+    
+    best_pace_str = None
+    if progress.best_pace_seconds and progress.best_pace_seconds > 0:
+        best_pace_str = format_pace(progress.best_pace_seconds)
     
     return UserProgressResponse(
         id=progress.id,
@@ -297,11 +422,38 @@ def create_progress_response(progress: UserProgress) -> UserProgressResponse:
         next_rank=next_rank,
         sessions_completed=progress.sessions_completed,
         total_duration_minutes=progress.total_duration_minutes,
+        total_distance_km=round(progress.total_distance_km, 2),
         current_streak=progress.current_streak,
         best_streak=progress.best_streak,
         progress_percentage=min(100, (progress.current_xp / xp_needed) * 100),
         trophies_unlocked=progress.trophies_unlocked,
-        daily_quests=progress.daily_quests
+        daily_quests=progress.daily_quests,
+        best_pace=best_pace_str,
+        notification_enabled=progress.notification_enabled,
+        notification_time=progress.notification_time
+    )
+
+def create_session_detail(session: Session) -> SessionDetailResponse:
+    return SessionDetailResponse(
+        id=session.id,
+        duration_minutes=session.duration_minutes,
+        duration_seconds=session.duration_seconds,
+        intensity=session.intensity,
+        intensity_name=session.intensity_name,
+        xp_earned=session.xp_earned,
+        distance_km=round(session.distance_km, 2),
+        avg_pace=format_pace(session.avg_pace_seconds),
+        max_pace=format_pace(session.max_pace_seconds),
+        min_pace=format_pace(session.min_pace_seconds),
+        avg_speed_kmh=round(session.avg_speed_kmh, 1),
+        max_speed_kmh=round(session.max_speed_kmh, 1),
+        elevation_gain=round(session.elevation_gain, 1),
+        elevation_loss=round(session.elevation_loss, 1),
+        calories_burned=session.calories_burned,
+        leveled_up=session.leveled_up,
+        level_after=session.level_after,
+        completed_at=session.completed_at.isoformat(),
+        route_points=session.route_points
     )
 
 # ============== ROUTES ==============
@@ -362,8 +514,8 @@ async def complete_session(input: CompleteSessionInput):
         progress.daily_quests = generate_daily_quests()
         progress.quests_last_reset = today
     
-    # Calculate XP earned
-    xp_earned = calculate_session_xp(input.duration_minutes, input.intensity)
+    # Calculate XP earned (now with distance bonus)
+    xp_earned = calculate_session_xp(input.duration_minutes, input.intensity, input.distance_km)
     
     # Store old values
     level_before = progress.level
@@ -390,6 +542,11 @@ async def complete_session(input: CompleteSessionInput):
     if input.intensity not in progress.intensities_completed:
         progress.intensities_completed.append(input.intensity)
     
+    # Update best pace
+    if input.max_pace_seconds > 0:
+        if progress.best_pace_seconds is None or input.max_pace_seconds < progress.best_pace_seconds:
+            progress.best_pace_seconds = input.max_pace_seconds
+    
     # Update quest progress
     quests_completed = []
     for quest in progress.daily_quests:
@@ -404,6 +561,8 @@ async def complete_session(input: CompleteSessionInput):
             quest['progress'] = 1
         elif quest['type'] == 'single_duration' and input.duration_minutes >= quest['target']:
             quest['progress'] = quest['target']
+        elif quest['type'] == 'single_distance' and input.distance_km >= quest['target']:
+            quest['progress'] = quest['target']
         
         if quest['progress'] >= quest['target'] and not quest['completed']:
             quest['completed'] = True
@@ -414,6 +573,7 @@ async def complete_session(input: CompleteSessionInput):
     progress.current_xp += xp_earned
     progress.total_xp += xp_earned
     progress.total_duration_minutes += input.duration_minutes
+    progress.total_distance_km += input.distance_km
     progress.sessions_completed += 1
     
     # Check for level ups
@@ -428,20 +588,27 @@ async def complete_session(input: CompleteSessionInput):
     progress.rank_id = new_rank['id']
     progress.updated_at = datetime.utcnow()
     
+    # Session data for trophy checks
+    session_data = {
+        'distance_km': input.distance_km,
+        'max_pace_seconds': input.max_pace_seconds
+    }
+    
     # Check for new trophies
     trophies_earned = []
     for trophy in TROPHIES:
         if trophy['id'] not in progress.trophies_unlocked:
-            if check_trophy_condition(trophy, progress.dict()):
+            if check_trophy_condition(trophy, progress.dict(), session_data):
                 progress.trophies_unlocked.append(trophy['id'])
                 trophies_earned.append(trophy)
                 progress.current_xp += trophy['xp_reward']
                 progress.total_xp += trophy['xp_reward']
     
-    # Save session
+    # Save session with full GPS data
     session = Session(
         device_id=input.device_id,
         duration_minutes=input.duration_minutes,
+        duration_seconds=input.duration_seconds,
         intensity=input.intensity,
         intensity_name=INTENSITY_NAMES[input.intensity],
         xp_earned=xp_earned,
@@ -451,7 +618,17 @@ async def complete_session(input: CompleteSessionInput):
         rank_before=rank_before['id'],
         rank_after=new_rank['id'],
         ranked_up=rank_before['id'] != new_rank['id'],
-        started_at=datetime.utcnow()
+        distance_km=input.distance_km,
+        avg_pace_seconds=input.avg_pace_seconds,
+        max_pace_seconds=input.max_pace_seconds,
+        min_pace_seconds=input.min_pace_seconds,
+        avg_speed_kmh=input.avg_speed_kmh,
+        max_speed_kmh=input.max_speed_kmh,
+        elevation_gain=input.elevation_gain,
+        elevation_loss=input.elevation_loss,
+        calories_burned=input.calories_burned,
+        route_points=input.route_points[:100],  # Limit stored points
+        started_at=datetime.utcnow() - timedelta(minutes=input.duration_minutes)
     )
     await db.sessions.insert_one(session.dict())
     
@@ -474,13 +651,22 @@ async def complete_session(input: CompleteSessionInput):
         quests_completed=quests_completed
     )
 
-@api_router.get("/sessions/{device_id}", response_model=List[Session])
+@api_router.get("/sessions/{device_id}")
 async def get_sessions(device_id: str, limit: int = 50):
-    """Get recent sessions for a device"""
+    """Get recent sessions for a device with full details"""
     sessions = await db.sessions.find(
         {"device_id": device_id}
     ).sort("completed_at", -1).limit(limit).to_list(limit)
-    return [Session(**s) for s in sessions]
+    
+    return [create_session_detail(Session(**s)) for s in sessions]
+
+@api_router.get("/session/{session_id}", response_model=SessionDetailResponse)
+async def get_session_detail(session_id: str):
+    """Get detailed info for a specific session"""
+    session_doc = await db.sessions.find_one({"id": session_id})
+    if not session_doc:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return create_session_detail(Session(**session_doc))
 
 @api_router.get("/trophies")
 async def get_all_trophies():
@@ -549,6 +735,7 @@ async def get_leaderboard(device_id: Optional[str] = None, limit: int = 50):
             total_xp=user.total_xp,
             player_rank=rank,
             sessions_completed=user.sessions_completed,
+            total_distance_km=round(user.total_distance_km, 1),
             is_current_user=device_id == user.device_id if device_id else False
         ))
     
@@ -582,6 +769,19 @@ async def update_username(input: UpdateUsernameInput):
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "Username updated", "username": input.username}
+
+@api_router.put("/notifications")
+async def update_notifications(input: UpdateNotificationInput):
+    """Update notification settings"""
+    result = await db.user_progress.update_one(
+        {"device_id": input.device_id},
+        {"$set": {"notification_enabled": input.enabled, "notification_time": input.time}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "Notifications updated", "enabled": input.enabled, "time": input.time}
 
 @api_router.delete("/progress/{device_id}")
 async def reset_progress(device_id: str):
