@@ -858,28 +858,7 @@ export default function Index() {
     }
   };
 
-  // Animated styles
-  const progressBarStyle = useAnimatedStyle(() => ({
-    width: `${progressWidth.value}%`,
-  }));
-
-  const buttonAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }],
-  }));
-
-  const pulseAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-  }));
-
-  const levelUpContainerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: levelUpScale.value }],
-    opacity: levelUpOpacity.value,
-  }));
-
-  const xpGainStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: xpGainTranslateY.value }],
-    opacity: xpGainOpacity.value,
-  }));
+  // Animated styles are now using React Native's Animated API directly in the JSX
 
   if (loading) {
     return (
