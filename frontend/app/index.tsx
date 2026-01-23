@@ -1187,7 +1187,7 @@ export default function Index() {
                 )}
                 <Ionicons name="chevron-forward" size={16} color="#6B7280" />
               </View>
-            </Animated.View>
+            </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
