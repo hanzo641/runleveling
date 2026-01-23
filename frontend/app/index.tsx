@@ -2849,4 +2849,140 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 16,
   },
+  // Avatar hint styles
+  avatarHint: {
+    position: 'absolute',
+    bottom: -5,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  // Ranks Modal styles
+  ranksModal: {
+    flex: 1,
+    backgroundColor: '#111111',
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+  },
+  ranksHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2D2D2D',
+  },
+  ranksTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  ranksContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  ranksSubtitle: {
+    fontSize: 15,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginVertical: 16,
+  },
+  rankCard: {
+    flexDirection: 'row',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  rankCardCurrent: {
+    borderColor: '#6366F1',
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  rankCardLocked: {
+    opacity: 0.7,
+  },
+  rankCardLeft: {
+    marginRight: 16,
+  },
+  rankAvatarContainer: {
+    position: 'relative',
+  },
+  rankAvatarLocked: {
+    opacity: 0.5,
+  },
+  rankLockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankCardInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  rankCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  rankCardName: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  currentBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  currentBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  rankCardLevel: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    marginBottom: 8,
+  },
+  rankCardLevelLocked: {
+    color: '#6B7280',
+  },
+  rankProgressContainer: {
+    marginTop: 4,
+  },
+  rankProgressBar: {
+    height: 6,
+    backgroundColor: '#2D2D2D',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  rankProgressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  rankProgressText: {
+    fontSize: 11,
+    color: '#6B7280',
+  },
+  ranksFooter: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingBottom: 40,
+  },
+  ranksFooterText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
 });
