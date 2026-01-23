@@ -62,6 +62,50 @@ def get_duration_multiplier(minutes: int) -> float:
     else:
         return 1.8  # Long sessions more rewarding
 
+# Automatic intensity detection based on average pace
+# Pace thresholds in seconds per km
+INTENSITY_THRESHOLDS = {
+    'extreme': 300,   # < 5:00 /km (fast)
+    'intense': 360,   # < 6:00 /km
+    'moderate': 420,  # < 7:00 /km
+    'light': 9999     # >= 7:00 /km (slow)
+}
+
+def calculate_intensity_from_pace(avg_pace_seconds: float, avg_speed_kmh: float) -> str:
+    """
+    Automatically determine intensity based on average pace or speed.
+    
+    Thresholds:
+    - Extrême: < 5:00 /km or > 12 km/h
+    - Intense: 5:00 - 6:00 /km or 10-12 km/h
+    - Modéré: 6:00 - 7:00 /km or 8.5-10 km/h
+    - Léger: > 7:00 /km or < 8.5 km/h
+    """
+    # If we have valid pace data, use it
+    if avg_pace_seconds > 0 and avg_pace_seconds < 3600:  # Valid pace (< 1 hour/km)
+        if avg_pace_seconds < INTENSITY_THRESHOLDS['extreme']:
+            return 'extreme'
+        elif avg_pace_seconds < INTENSITY_THRESHOLDS['intense']:
+            return 'intense'
+        elif avg_pace_seconds < INTENSITY_THRESHOLDS['moderate']:
+            return 'moderate'
+        else:
+            return 'light'
+    
+    # Fallback to speed if pace not available
+    if avg_speed_kmh > 0:
+        if avg_speed_kmh >= 12:
+            return 'extreme'
+        elif avg_speed_kmh >= 10:
+            return 'intense'
+        elif avg_speed_kmh >= 8.5:
+            return 'moderate'
+        else:
+            return 'light'
+    
+    # Default to moderate if no GPS data
+    return 'moderate'
+
 # Distance bonus multiplier
 def get_distance_multiplier(distance_km: float) -> float:
     if distance_km < 1:
