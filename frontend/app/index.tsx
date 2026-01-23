@@ -234,6 +234,10 @@ export default function Index() {
   const [showSessionDetail, setShowSessionDetail] = useState(false);
   const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
   const [showRanksModal, setShowRanksModal] = useState(false);
+  const [showRunComplete, setShowRunComplete] = useState(false);
+  const [runCompleteData, setRunCompleteData] = useState<any>(null);
+  const [currentTrophyIndex, setCurrentTrophyIndex] = useState(0);
+  const [showSingleTrophy, setShowSingleTrophy] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState('08:00');
