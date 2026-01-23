@@ -155,6 +155,19 @@ interface SessionResponse {
   quests_completed: Quest[];
 }
 
+interface StravaStatus {
+  connected: boolean;
+  athlete_name: string | null;
+  athlete_id: number | null;
+  connected_at?: string;
+}
+
+interface StravaSyncResult {
+  activities_synced: number;
+  total_xp_earned: number;
+  new_sessions: string[];
+}
+
 interface LocationPoint {
   latitude: number;
   longitude: number;
