@@ -848,6 +848,314 @@ async def reset_progress(device_id: str):
     await db.sessions.delete_many({"device_id": device_id})
     return {"message": "Progress reset successfully"}
 
+# ============== STRAVA INTEGRATION ==============
+
+class StravaConnection(BaseModel):
+    device_id: str
+    strava_athlete_id: int
+    access_token: str
+    refresh_token: str
+    expires_at: int
+    athlete_firstname: str = ""
+    athlete_lastname: str = ""
+    athlete_profile: str = ""
+    connected_at: datetime = Field(default_factory=datetime.utcnow)
+
+class StravaConnectInput(BaseModel):
+    device_id: str
+    code: str
+
+class StravaSyncResult(BaseModel):
+    activities_synced: int
+    total_xp_earned: int
+    new_sessions: List[str]
+
+async def refresh_strava_token(connection: StravaConnection) -> StravaConnection:
+    """Refresh Strava access token if expired"""
+    if connection.expires_at > datetime.utcnow().timestamp():
+        return connection
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(STRAVA_TOKEN_URL, data={
+            'client_id': STRAVA_CLIENT_ID,
+            'client_secret': STRAVA_CLIENT_SECRET,
+            'refresh_token': connection.refresh_token,
+            'grant_type': 'refresh_token'
+        })
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Failed to refresh Strava token")
+        
+        token_data = response.json()
+        connection.access_token = token_data['access_token']
+        connection.refresh_token = token_data['refresh_token']
+        connection.expires_at = token_data['expires_at']
+        
+        # Update in database
+        await db.strava_connections.update_one(
+            {"device_id": connection.device_id},
+            {"$set": {
+                "access_token": connection.access_token,
+                "refresh_token": connection.refresh_token,
+                "expires_at": connection.expires_at
+            }}
+        )
+        
+        return connection
+
+@api_router.get("/strava/auth-url")
+async def get_strava_auth_url(device_id: str):
+    """Get Strava authorization URL"""
+    if not STRAVA_CLIENT_ID:
+        raise HTTPException(status_code=500, detail="Strava not configured")
+    
+    # Include device_id in state for callback
+    auth_url = (
+        f"{STRAVA_AUTH_URL}?"
+        f"client_id={STRAVA_CLIENT_ID}&"
+        f"redirect_uri={STRAVA_REDIRECT_URI}&"
+        f"response_type=code&"
+        f"scope=activity:read_all&"
+        f"state={device_id}"
+    )
+    return {"auth_url": auth_url}
+
+@api_router.post("/strava/connect")
+async def connect_strava(input: StravaConnectInput):
+    """Exchange authorization code for access token and save connection"""
+    if not STRAVA_CLIENT_ID or not STRAVA_CLIENT_SECRET:
+        raise HTTPException(status_code=500, detail="Strava not configured")
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(STRAVA_TOKEN_URL, data={
+            'client_id': STRAVA_CLIENT_ID,
+            'client_secret': STRAVA_CLIENT_SECRET,
+            'code': input.code,
+            'grant_type': 'authorization_code'
+        })
+        
+        if response.status_code != 200:
+            logger.error(f"Strava token error: {response.text}")
+            raise HTTPException(status_code=400, detail="Failed to connect to Strava")
+        
+        token_data = response.json()
+        athlete = token_data.get('athlete', {})
+        
+        connection = StravaConnection(
+            device_id=input.device_id,
+            strava_athlete_id=athlete.get('id', 0),
+            access_token=token_data['access_token'],
+            refresh_token=token_data['refresh_token'],
+            expires_at=token_data['expires_at'],
+            athlete_firstname=athlete.get('firstname', ''),
+            athlete_lastname=athlete.get('lastname', ''),
+            athlete_profile=athlete.get('profile', '')
+        )
+        
+        # Save or update connection
+        await db.strava_connections.update_one(
+            {"device_id": input.device_id},
+            {"$set": connection.dict()},
+            upsert=True
+        )
+        
+        return {
+            "connected": True,
+            "athlete_name": f"{connection.athlete_firstname} {connection.athlete_lastname}".strip(),
+            "athlete_id": connection.strava_athlete_id
+        }
+
+@api_router.get("/strava/status/{device_id}")
+async def get_strava_status(device_id: str):
+    """Check if user has connected Strava"""
+    connection_doc = await db.strava_connections.find_one({"device_id": device_id})
+    
+    if not connection_doc:
+        return {
+            "connected": False,
+            "athlete_name": None,
+            "athlete_id": None
+        }
+    
+    connection = StravaConnection(**connection_doc)
+    return {
+        "connected": True,
+        "athlete_name": f"{connection.athlete_firstname} {connection.athlete_lastname}".strip(),
+        "athlete_id": connection.strava_athlete_id,
+        "connected_at": connection.connected_at.isoformat()
+    }
+
+@api_router.delete("/strava/disconnect/{device_id}")
+async def disconnect_strava(device_id: str):
+    """Disconnect Strava account"""
+    result = await db.strava_connections.delete_one({"device_id": device_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="No Strava connection found")
+    
+    return {"message": "Strava disconnected successfully"}
+
+@api_router.post("/strava/sync/{device_id}")
+async def sync_strava_activities(device_id: str, days: int = 7):
+    """Sync recent Strava activities and convert to RunLeveling sessions"""
+    connection_doc = await db.strava_connections.find_one({"device_id": device_id})
+    
+    if not connection_doc:
+        raise HTTPException(status_code=404, detail="Strava not connected")
+    
+    connection = StravaConnection(**connection_doc)
+    connection = await refresh_strava_token(connection)
+    
+    # Fetch recent activities from Strava
+    after_timestamp = int((datetime.utcnow() - timedelta(days=days)).timestamp())
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{STRAVA_API_URL}/athlete/activities",
+            headers={"Authorization": f"Bearer {connection.access_token}"},
+            params={"after": after_timestamp, "per_page": 50}
+        )
+        
+        if response.status_code != 200:
+            logger.error(f"Strava API error: {response.text}")
+            raise HTTPException(status_code=400, detail="Failed to fetch Strava activities")
+        
+        activities = response.json()
+    
+    # Filter only runs
+    runs = [a for a in activities if a.get('type') in ['Run', 'TrailRun', 'VirtualRun']]
+    
+    activities_synced = 0
+    total_xp_earned = 0
+    new_sessions = []
+    
+    for activity in runs:
+        # Check if already synced
+        strava_activity_id = str(activity['id'])
+        existing = await db.sessions.find_one({
+            "device_id": device_id,
+            "strava_activity_id": strava_activity_id
+        })
+        
+        if existing:
+            continue
+        
+        # Convert Strava activity to RunLeveling session
+        duration_seconds = activity.get('moving_time', 0)
+        duration_minutes = duration_seconds // 60
+        
+        if duration_minutes < 1:
+            continue
+        
+        distance_km = activity.get('distance', 0) / 1000
+        
+        # Calculate pace (seconds per km)
+        avg_pace_seconds = (duration_seconds / distance_km) if distance_km > 0 else 0
+        
+        # Get average speed in km/h
+        avg_speed = activity.get('average_speed', 0)  # m/s
+        avg_speed_kmh = avg_speed * 3.6
+        
+        max_speed = activity.get('max_speed', 0)  # m/s
+        max_speed_kmh = max_speed * 3.6
+        
+        # Elevation
+        elevation_gain = activity.get('total_elevation_gain', 0)
+        
+        # Calculate intensity automatically
+        intensity = calculate_intensity_from_pace(avg_pace_seconds, avg_speed_kmh)
+        
+        # Calculate XP
+        xp_earned = calculate_session_xp(duration_minutes, intensity, distance_km)
+        
+        # Get user progress
+        progress_doc = await db.user_progress.find_one({"device_id": device_id})
+        if not progress_doc:
+            new_progress = UserProgress(device_id=device_id)
+            new_progress.daily_quests = generate_daily_quests()
+            new_progress.quests_last_reset = datetime.utcnow().strftime('%Y-%m-%d')
+            await db.user_progress.insert_one(new_progress.dict())
+            progress_doc = new_progress.dict()
+        
+        progress = UserProgress(**progress_doc)
+        
+        level_before = progress.level
+        rank_before = get_rank_for_level(progress.level)
+        
+        # Update progress
+        progress.current_xp += xp_earned
+        progress.total_xp += xp_earned
+        progress.total_duration_minutes += duration_minutes
+        progress.total_distance_km += distance_km
+        progress.sessions_completed += 1
+        
+        # Track intensity
+        if intensity not in progress.intensities_completed:
+            progress.intensities_completed.append(intensity)
+        
+        # Check for level ups
+        while progress.current_xp >= get_xp_for_level(progress.level):
+            progress.current_xp -= get_xp_for_level(progress.level)
+            progress.level += 1
+        
+        new_rank = get_rank_for_level(progress.level)
+        progress.rank_id = new_rank['id']
+        progress.updated_at = datetime.utcnow()
+        
+        # Parse Strava start date
+        started_at = datetime.fromisoformat(activity['start_date'].replace('Z', '+00:00'))
+        
+        # Create session
+        session = Session(
+            device_id=device_id,
+            duration_minutes=duration_minutes,
+            duration_seconds=duration_seconds % 60,
+            intensity=intensity,
+            intensity_name=INTENSITY_NAMES[intensity],
+            xp_earned=xp_earned,
+            level_before=level_before,
+            level_after=progress.level,
+            leveled_up=progress.level > level_before,
+            rank_before=rank_before['id'],
+            rank_after=new_rank['id'],
+            ranked_up=rank_before['id'] != new_rank['id'],
+            distance_km=distance_km,
+            avg_pace_seconds=avg_pace_seconds,
+            max_pace_seconds=avg_pace_seconds * 0.85 if avg_pace_seconds > 0 else 0,  # Estimate
+            min_pace_seconds=avg_pace_seconds * 1.15 if avg_pace_seconds > 0 else 0,
+            avg_speed_kmh=avg_speed_kmh,
+            max_speed_kmh=max_speed_kmh,
+            elevation_gain=elevation_gain,
+            elevation_loss=0,
+            calories_burned=activity.get('calories', 0) or int(duration_minutes * 10),
+            route_points=[],
+            started_at=started_at
+        )
+        
+        # Add Strava metadata
+        session_dict = session.dict()
+        session_dict['strava_activity_id'] = strava_activity_id
+        session_dict['strava_name'] = activity.get('name', '')
+        session_dict['source'] = 'strava'
+        
+        await db.sessions.insert_one(session_dict)
+        
+        # Update user progress
+        await db.user_progress.update_one(
+            {"device_id": device_id},
+            {"$set": progress.dict()}
+        )
+        
+        activities_synced += 1
+        total_xp_earned += xp_earned
+        new_sessions.append(session.id)
+    
+    return StravaSyncResult(
+        activities_synced=activities_synced,
+        total_xp_earned=total_xp_earned,
+        new_sessions=new_sessions
+    )
+
 # Include the router in the main app
 app.include_router(api_router)
 
