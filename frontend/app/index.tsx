@@ -834,10 +834,15 @@ export default function Index() {
         </View>
       </View>
 
-      {/* Settings Button */}
-      <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettingsModal(true)}>
-        <Ionicons name="settings-outline" size={20} color="#6B7280" />
-        <Text style={styles.settingsText}>Paramètres</Text>
+      {/* Bottom buttons row */}
+      <View style={styles.bottomButtonsRow}>
+        <TouchableOpacity style={styles.infoButton} onPress={() => setShowIntensityInfo(true)}>
+          <Ionicons name="information-circle-outline" size={18} color="#6B7280" />
+          <Text style={styles.infoButtonText}>Intensités</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettingsModal(true)}>
+          <Ionicons name="settings-outline" size={18} color="#6B7280" />
+          <Text style={styles.settingsText}>Paramètres</Text>
       </TouchableOpacity>
     </ScrollView>
   );
