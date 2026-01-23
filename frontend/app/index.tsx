@@ -905,7 +905,7 @@ export default function Index() {
       {/* XP Progress Bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBackground}>
-          <Animated.View style={[styles.progressFill, progressBarStyle, { backgroundColor: rankColor }]} />
+          <Animated.View style={[styles.progressFill, { backgroundColor: rankColor, width: progressWidthAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }) }]} />
         </View>
         <View style={styles.xpTextContainer}>
           <Text style={styles.xpText}>
@@ -932,7 +932,7 @@ export default function Index() {
 
       {/* XP Gain Animation */}
       {showXpGain && (
-        <Animated.View style={[styles.xpGainContainer, xpGainStyle]}>
+        <Animated.View style={[styles.xpGainContainer, { transform: [{ translateY: xpGainTranslateYAnim }], opacity: xpGainOpacityAnim }]}>
           <Text style={[styles.xpGainText, { color: rankColor }]}>+{xpGained} XP</Text>
         </Animated.View>
       )}
