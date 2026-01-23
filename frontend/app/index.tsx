@@ -202,7 +202,6 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionDuration, setSessionDuration] = useState(0);
-  const [selectedIntensity, setSelectedIntensity] = useState('moderate');
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpData, setLevelUpData] = useState<{ level: number; rank: Rank; rankedUp: boolean; oldRank?: Rank } | null>(null);
   const [xpGained, setXpGained] = useState(0);
@@ -211,7 +210,7 @@ export default function Index() {
   const [sessions, setSessions] = useState<SessionDetail[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [allTrophies, setAllTrophies] = useState<{ unlocked: Trophy[]; locked: Trophy[] }>({ unlocked: [], locked: [] });
-  const [showIntensityPicker, setShowIntensityPicker] = useState(false);
+  const [showIntensityInfo, setShowIntensityInfo] = useState(false);
   const [showTrophyUnlock, setShowTrophyUnlock] = useState(false);
   const [unlockedTrophies, setUnlockedTrophies] = useState<Trophy[]>([]);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
