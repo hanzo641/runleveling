@@ -248,14 +248,15 @@ export default function Index() {
   const lastLocation = useRef<LocationPoint | null>(null);
   const deviceId = useRef(getDeviceId());
 
-  // Animation values
-  const progressWidth = useSharedValue(0);
-  const buttonScale = useSharedValue(1);
-  const levelUpScale = useSharedValue(0);
-  const levelUpOpacity = useSharedValue(0);
-  const xpGainTranslateY = useSharedValue(0);
-  const xpGainOpacity = useSharedValue(0);
-  const pulseScale = useSharedValue(1);
+  // Animation values - using React Native's Animated API
+  const progressWidthAnim = useRef(new Animated.Value(0)).current;
+  const buttonScaleAnim = useRef(new Animated.Value(1)).current;
+  const levelUpScaleAnim = useRef(new Animated.Value(0)).current;
+  const levelUpOpacityAnim = useRef(new Animated.Value(0)).current;
+  const xpGainTranslateYAnim = useRef(new Animated.Value(0)).current;
+  const xpGainOpacityAnim = useRef(new Animated.Value(0)).current;
+  const pulseScaleAnim = useRef(new Animated.Value(1)).current;
+  const [progressPercent, setProgressPercent] = useState(0);
 
   // Request permissions
   useEffect(() => {
