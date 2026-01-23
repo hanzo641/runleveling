@@ -582,8 +582,8 @@ async def complete_session(input: CompleteSessionInput):
     progress.last_session_date = today
     
     # Track intensity completed
-    if input.intensity not in progress.intensities_completed:
-        progress.intensities_completed.append(input.intensity)
+    if intensity not in progress.intensities_completed:
+        progress.intensities_completed.append(intensity)
     
     # Update best pace
     if input.max_pace_seconds > 0:
@@ -600,17 +600,22 @@ async def complete_session(input: CompleteSessionInput):
             quest['progress'] += 1
         elif quest['type'] == 'duration':
             quest['progress'] += input.duration_minutes
-        elif quest['type'] == 'intensity' and input.intensity in ['intense', 'extreme']:
+        elif quest['type'] == 'intensity' and intensity in ['intense', 'extreme']:
             quest['progress'] = 1
         elif quest['type'] == 'single_duration' and input.duration_minutes >= quest['target']:
             quest['progress'] = quest['target']
         elif quest['type'] == 'single_distance' and input.distance_km >= quest['target']:
             quest['progress'] = quest['target']
         
-        if quest['progress'] >= quest['target'] and not quest['completed']:
+        # Only compare if target is numeric
+        if isinstance(quest['target'], (int, float)) and quest['progress'] >= quest['target'] and not quest['completed']:
             quest['completed'] = True
             quests_completed.append(quest)
             xp_earned += quest['xp_reward']  # Add quest reward to XP
+        elif quest['type'] == 'intensity' and quest['progress'] >= 1 and not quest['completed']:
+            quest['completed'] = True
+            quests_completed.append(quest)
+            xp_earned += quest['xp_reward']
     
     # Add XP
     progress.current_xp += xp_earned
@@ -652,8 +657,8 @@ async def complete_session(input: CompleteSessionInput):
         device_id=input.device_id,
         duration_minutes=input.duration_minutes,
         duration_seconds=input.duration_seconds,
-        intensity=input.intensity,
-        intensity_name=INTENSITY_NAMES[input.intensity],
+        intensity=intensity,
+        intensity_name=INTENSITY_NAMES[intensity],
         xp_earned=xp_earned,
         level_before=level_before,
         level_after=progress.level,
