@@ -22,6 +22,14 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Strava API Configuration
+STRAVA_CLIENT_ID = os.environ.get('STRAVA_CLIENT_ID', '')
+STRAVA_CLIENT_SECRET = os.environ.get('STRAVA_CLIENT_SECRET', '')
+STRAVA_REDIRECT_URI = os.environ.get('STRAVA_REDIRECT_URI', 'runleveling://strava-callback')
+STRAVA_AUTH_URL = "https://www.strava.com/oauth/authorize"
+STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token"
+STRAVA_API_URL = "https://www.strava.com/api/v3"
+
 # Create the main app without a prefix
 app = FastAPI()
 
