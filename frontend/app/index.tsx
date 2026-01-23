@@ -843,7 +843,8 @@ export default function Index() {
         <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettingsModal(true)}>
           <Ionicons name="settings-outline" size={18} color="#6B7280" />
           <Text style={styles.settingsText}>Paramètres</Text>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 
