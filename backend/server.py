@@ -534,10 +534,10 @@ async def get_progress(device_id: str):
 
 @api_router.post("/session/complete", response_model=SessionResponse)
 async def complete_session(input: CompleteSessionInput):
-    """Complete a running session and award XP"""
-    # Validate intensity
-    if input.intensity not in INTENSITY_MULTIPLIERS:
-        raise HTTPException(status_code=400, detail="Invalid intensity level")
+    """Complete a running session and award XP - intensity is calculated automatically"""
+    
+    # Automatically calculate intensity based on pace/speed
+    intensity = calculate_intensity_from_pace(input.avg_pace_seconds, input.avg_speed_kmh)
     
     # Get or create progress
     progress_doc = await db.user_progress.find_one({"device_id": input.device_id})
@@ -558,7 +558,7 @@ async def complete_session(input: CompleteSessionInput):
         progress.quests_last_reset = today
     
     # Calculate XP earned (now with distance bonus)
-    xp_earned = calculate_session_xp(input.duration_minutes, input.intensity, input.distance_km)
+    xp_earned = calculate_session_xp(input.duration_minutes, intensity, input.distance_km)
     
     # Store old values
     level_before = progress.level
