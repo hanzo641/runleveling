@@ -761,70 +761,111 @@ export default function Index() {
 
       const data: SessionResponse = await response.json();
 
-      // Show XP gain animation
-      setXpGained(data.xp_earned);
-      setShowXpGain(true);
-      xpGainTranslateYAnim.setValue(0);
-      xpGainOpacityAnim.setValue(1);
-      Animated.parallel([
-        Animated.timing(xpGainTranslateYAnim, {
-          toValue: -100,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(xpGainOpacityAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setShowXpGain(false);
+      // Store run complete data
+      setRunCompleteData({
+        duration: sessionDuration,
+        distance: currentDistance,
+        avgPace,
+        calories,
+        xpEarned: data.xp_earned,
+        xpBefore: data.progress.current_xp - data.xp_earned,
+        xpAfter: data.progress.current_xp,
+        xpForNextLevel: data.progress.xp_for_next_level,
+        leveledUp: data.leveled_up,
+        newLevel: data.progress.level,
+        rankedUp: data.ranked_up,
+        newRank: data.new_rank,
+        trophies: data.trophies_earned || [],
+        progressPercentage: data.progress.progress_percentage,
       });
-
-      // Animate progress bar
-      if (data.leveled_up) {
-        Animated.sequence([
-          Animated.timing(progressWidthAnim, { toValue: 100, duration: 500, useNativeDriver: false }),
-          Animated.timing(progressWidthAnim, { toValue: 0, duration: 100, useNativeDriver: false }),
-          Animated.timing(progressWidthAnim, { toValue: data.progress.progress_percentage, duration: 500, useNativeDriver: false }),
-        ]).start();
-        setProgressPercent(data.progress.progress_percentage);
-
-        setTimeout(() => {
-          setLevelUpData({
-            level: data.progress.level,
-            rank: data.new_rank,
-            rankedUp: data.ranked_up,
-            oldRank: data.old_rank,
-          });
-          setShowLevelUp(true);
-          levelUpScaleAnim.setValue(0);
-          levelUpOpacityAnim.setValue(0);
-          Animated.parallel([
-            Animated.spring(levelUpScaleAnim, { toValue: 1, damping: 10, useNativeDriver: true }),
-            Animated.timing(levelUpOpacityAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
-          ]).start();
-        }, 700);
-      } else {
-        Animated.timing(progressWidthAnim, {
+      
+      // Show run complete modal
+      setShowRunComplete(true);
+      runCompleteXpAnim.setValue(0);
+      
+      // Animate XP bar with sparkles
+      setTimeout(() => {
+        // Start sparkle animations
+        const sparkleAnimation = () => {
+          Animated.loop(
+            Animated.sequence([
+              Animated.parallel([
+                Animated.timing(sparkleOpacity1, { toValue: 1, duration: 200, useNativeDriver: true }),
+                Animated.timing(sparkleOpacity2, { toValue: 1, duration: 200, delay: 100, useNativeDriver: true }),
+                Animated.timing(sparkleOpacity3, { toValue: 1, duration: 200, delay: 200, useNativeDriver: true }),
+              ]),
+              Animated.parallel([
+                Animated.timing(sparkleOpacity1, { toValue: 0, duration: 300, useNativeDriver: true }),
+                Animated.timing(sparkleOpacity2, { toValue: 0, duration: 300, delay: 100, useNativeDriver: true }),
+                Animated.timing(sparkleOpacity3, { toValue: 0, duration: 300, delay: 200, useNativeDriver: true }),
+              ]),
+            ]),
+            { iterations: 3 }
+          ).start();
+        };
+        sparkleAnimation();
+        
+        // Animate XP bar
+        Animated.timing(runCompleteXpAnim, {
           toValue: data.progress.progress_percentage,
-          duration: 800,
+          duration: 1500,
           useNativeDriver: false,
         }).start();
-        setProgressPercent(data.progress.progress_percentage);
-      }
+      }, 500);
 
-      // Show trophy unlock if any
-      if (data.trophies_earned && data.trophies_earned.length > 0) {
-        setTimeout(() => {
-          setUnlockedTrophies(data.trophies_earned);
-          setShowTrophyUnlock(true);
-        }, data.leveled_up ? 2500 : 1000);
-      }
-
+      // Update main progress
       setProgress(data.progress);
+      setProgressPercent(data.progress.progress_percentage);
+      progressWidthAnim.setValue(data.progress.progress_percentage);
+
     } catch (error) {
       console.error('Error completing session:', error);
+    }
+  };
+
+  // Trophy messages motivants
+  const trophyMessages = [
+    "Tu te surpasses ! 🔥",
+    "Quel exploit ! Continue comme ça !",
+    "Tu es sur la bonne voie !",
+    "Impressionnant ! Tu progresses !",
+    "Bravo champion ! 💪",
+    "Tu repousses tes limites !",
+    "La persévérance paie !",
+    "Encore un pas vers la légende !",
+  ];
+
+  const showNextTrophy = () => {
+    if (runCompleteData?.trophies && currentTrophyIndex < runCompleteData.trophies.length) {
+      setShowSingleTrophy(true);
+      trophyScaleAnim.setValue(0);
+      Animated.spring(trophyScaleAnim, {
+        toValue: 1,
+        damping: 8,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  const closeTrophyAndContinue = () => {
+    setShowSingleTrophy(false);
+    if (runCompleteData?.trophies && currentTrophyIndex < runCompleteData.trophies.length - 1) {
+      setCurrentTrophyIndex(prev => prev + 1);
+      setTimeout(() => showNextTrophy(), 300);
+    } else {
+      // All trophies shown, close run complete if needed
+      setCurrentTrophyIndex(0);
+    }
+  };
+
+  const closeRunComplete = () => {
+    setShowRunComplete(false);
+    setRunCompleteData(null);
+    
+    // Show trophies one by one if any
+    if (runCompleteData?.trophies?.length > 0) {
+      setCurrentTrophyIndex(0);
+      setTimeout(() => showNextTrophy(), 300);
     }
   };
 
