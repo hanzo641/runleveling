@@ -1036,9 +1036,8 @@ export default function Index() {
       <Text style={styles.sectionSubtitle}>Se réinitialisent à minuit</Text>
 
       {progress?.daily_quests?.map((quest, index) => (
-        <Animated.View
+        <View
           key={quest.id}
-          
           style={[
             styles.questCard,
             quest.completed && styles.questCardCompleted
