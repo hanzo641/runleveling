@@ -874,8 +874,35 @@ export default function Index() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366F1" />
-        <Text style={styles.loadingText}>RunLeveling</Text>
+        {/* Logo inspiré de l'icône */}
+        <View style={styles.loadingLogoContainer}>
+          {/* Arc doré */}
+          <View style={styles.loadingArc} />
+          {/* Flamme */}
+          <View style={styles.loadingFlame}>
+            <Text style={styles.loadingFlameIcon}>🔥</Text>
+          </View>
+          {/* Étoile */}
+          <View style={styles.loadingStar}>
+            <Text style={styles.loadingStarIcon}>⭐</Text>
+          </View>
+          {/* Runner */}
+          <View style={styles.loadingRunner}>
+            <Ionicons name="walk" size={50} color="#3B82F6" />
+          </View>
+          {/* Level badge */}
+          <View style={styles.loadingLevelBadge}>
+            <Text style={styles.loadingLevelText}>1</Text>
+          </View>
+        </View>
+        
+        {/* Title */}
+        <View style={styles.loadingTitleContainer}>
+          <Text style={styles.loadingTitleRun}>RUN</Text>
+          <Text style={styles.loadingTitleLeveling}>LEVELING</Text>
+        </View>
+        
+        <ActivityIndicator size="small" color="#F59E0B" style={{ marginTop: 20 }} />
       </View>
     );
   }
