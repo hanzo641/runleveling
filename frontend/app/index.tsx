@@ -1459,7 +1459,7 @@ export default function Index() {
           activeOpacity={1}
           onPress={closeLevelUp}
         >
-          <Animated.View style={[styles.levelUpModal, levelUpContainerStyle]}>
+          <Animated.View style={[styles.levelUpModal, { transform: [{ scale: levelUpScaleAnim }], opacity: levelUpOpacityAnim }]}>
             <View style={styles.levelUpContent}>
               {levelUpData?.rankedUp ? (
                 <>
