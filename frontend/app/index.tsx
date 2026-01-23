@@ -1611,97 +1611,126 @@ export default function Index() {
       >
         <View style={styles.ranksModal}>
           <View style={styles.ranksHeader}>
-            <Text style={styles.ranksTitle}>Progression des Rangs</Text>
-            <TouchableOpacity onPress={() => setShowRanksModal(false)}>
-              <Ionicons name="close" size={28} color="#FFFFFF" />
+            <View>
+              <Text style={styles.ranksTitle}>Progression</Text>
+              <Text style={styles.ranksLevelIndicator}>Niveau {progress?.level || 1}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.ranksCloseBtn}
+              onPress={() => setShowRanksModal(false)}
+            >
+              <Ionicons name="close" size={24} color="#9CA3AF" />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.ranksContent} showsVerticalScrollIndicator={false}>
-            <Text style={styles.ranksSubtitle}>
-              Niveau actuel: {progress?.level || 1}
-            </Text>
+            {/* Current Rank Highlight */}
+            <View style={styles.currentRankSection}>
+              <Text style={styles.currentRankLabel}>RANG ACTUEL</Text>
+              <View style={styles.currentRankDisplay}>
+                <RankAvatar 
+                  rankId={progress?.rank?.id || 'debutant'} 
+                  size={70} 
+                  showGlow={true}
+                />
+                <View style={styles.currentRankInfo}>
+                  <Text style={[styles.currentRankName, { color: progress?.rank?.color || '#6B7280' }]}>
+                    {progress?.rank?.name || 'Débutant'}
+                  </Text>
+                  {progress?.next_rank && (
+                    <Text style={styles.currentRankNext}>
+                      Prochain rang dans {progress.next_rank.min_level - (progress?.level || 1)} niveaux
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
 
-            {ALL_RANKS.map((rank, index) => {
-              const isUnlocked = (progress?.level || 1) >= rank.min_level;
-              const isCurrent = progress?.rank?.id === rank.id;
-              
-              return (
-                <View 
-                  key={rank.id} 
-                  style={[
-                    styles.rankCard,
-                    isCurrent && styles.rankCardCurrent,
-                    !isUnlocked && styles.rankCardLocked
-                  ]}
-                >
-                  <View style={styles.rankCardLeft}>
+            {/* Ranks Timeline */}
+            <View style={styles.ranksTimeline}>
+              {ALL_RANKS.map((rank, index) => {
+                const isUnlocked = (progress?.level || 1) >= rank.min_level;
+                const isCurrent = progress?.rank?.id === rank.id;
+                const isLast = index === ALL_RANKS.length - 1;
+                
+                return (
+                  <View key={rank.id} style={styles.rankTimelineItem}>
+                    {/* Timeline connector */}
+                    {!isLast && (
+                      <View style={[
+                        styles.rankTimelineConnector,
+                        isUnlocked && styles.rankTimelineConnectorActive
+                      ]} />
+                    )}
+                    
+                    {/* Rank node */}
                     <View style={[
-                      styles.rankAvatarContainer,
-                      !isUnlocked && styles.rankAvatarLocked
+                      styles.rankTimelineNode,
+                      isUnlocked && { borderColor: rank.color, backgroundColor: rank.color },
+                      isCurrent && styles.rankTimelineNodeCurrent
                     ]}>
-                      <RankAvatar 
-                        rankId={rank.id} 
-                        size={60} 
-                        showGlow={isCurrent}
-                      />
-                      {!isUnlocked && (
-                        <View style={styles.rankLockOverlay}>
-                          <Ionicons name="lock-closed" size={20} color="#FFFFFF" />
-                        </View>
+                      {isUnlocked ? (
+                        <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.rankTimelineNodeText}>{index + 1}</Text>
                       )}
                     </View>
-                  </View>
-
-                  <View style={styles.rankCardInfo}>
-                    <View style={styles.rankCardHeader}>
-                      <Text style={[
-                        styles.rankCardName,
-                        { color: isUnlocked ? rank.color : '#6B7280' }
-                      ]}>
-                        {rank.icon} {rank.name}
-                      </Text>
+                    
+                    {/* Rank info */}
+                    <View style={styles.rankTimelineContent}>
+                      <View style={styles.rankTimelineHeader}>
+                        <Text style={[
+                          styles.rankTimelineName,
+                          isUnlocked && { color: rank.color },
+                          !isUnlocked && styles.rankTimelineNameLocked
+                        ]}>
+                          {rank.name}
+                        </Text>
+                        <Text style={[
+                          styles.rankTimelineLevel,
+                          isUnlocked && styles.rankTimelineLevelUnlocked
+                        ]}>
+                          Niv. {rank.min_level}
+                        </Text>
+                      </View>
+                      
                       {isCurrent && (
-                        <View style={[styles.currentBadge, { backgroundColor: rank.color }]}>
-                          <Text style={styles.currentBadgeText}>ACTUEL</Text>
+                        <View style={[styles.rankCurrentIndicator, { backgroundColor: rank.color }]}>
+                          <Text style={styles.rankCurrentIndicatorText}>En cours</Text>
+                        </View>
+                      )}
+                      
+                      {!isUnlocked && (
+                        <View style={styles.rankTimelineProgress}>
+                          <View style={styles.rankTimelineProgressBar}>
+                            <View 
+                              style={[
+                                styles.rankTimelineProgressFill,
+                                { 
+                                  width: `${Math.min(100, ((progress?.level || 1) / rank.min_level) * 100)}%`,
+                                  backgroundColor: rank.color
+                                }
+                              ]} 
+                            />
+                          </View>
                         </View>
                       )}
                     </View>
                     
-                    <Text style={[
-                      styles.rankCardLevel,
-                      !isUnlocked && styles.rankCardLevelLocked
+                    {/* Mini avatar preview */}
+                    <View style={[
+                      styles.rankTimelineAvatar,
+                      !isUnlocked && styles.rankTimelineAvatarLocked
                     ]}>
-                      {isUnlocked ? `Débloqué au niveau ${rank.min_level}` : `Niveau ${rank.min_level} requis`}
-                    </Text>
-
-                    {!isUnlocked && (
-                      <View style={styles.rankProgressContainer}>
-                        <View style={styles.rankProgressBar}>
-                          <View 
-                            style={[
-                              styles.rankProgressFill,
-                              { 
-                                width: `${Math.min(100, ((progress?.level || 1) / rank.min_level) * 100)}%`,
-                                backgroundColor: rank.color
-                              }
-                            ]} 
-                          />
-                        </View>
-                        <Text style={styles.rankProgressText}>
-                          {rank.min_level - (progress?.level || 1)} niveaux restants
-                        </Text>
-                      </View>
-                    )}
+                      <RankAvatar 
+                        rankId={rank.id} 
+                        size={40} 
+                        showGlow={false}
+                      />
+                    </View>
                   </View>
-                </View>
-              );
-            })}
-
-            <View style={styles.ranksFooter}>
-              <Text style={styles.ranksFooterText}>
-                Continue à courir pour débloquer de nouveaux rangs ! 🏃‍♂️
-              </Text>
+                );
+              })}
             </View>
           </ScrollView>
         </View>
