@@ -1094,9 +1094,8 @@ export default function Index() {
         <>
           <Text style={styles.trophySection}>Débloqués</Text>
           {allTrophies.unlocked.map((trophy, index) => (
-            <Animated.View
+            <View
               key={trophy.id}
-              
               style={[styles.trophyCard, styles.trophyUnlocked]}
             >
               <Text style={styles.trophyIcon}>{trophy.icon}</Text>
@@ -1107,7 +1106,7 @@ export default function Index() {
               <View style={styles.trophyReward}>
                 <Text style={styles.trophyXp}>+{trophy.xp_reward}</Text>
               </View>
-            </Animated.View>
+            </View>
           ))}
         </>
       )}
