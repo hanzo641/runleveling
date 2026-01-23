@@ -744,20 +744,31 @@ export default function Index() {
       // Show XP gain animation
       setXpGained(data.xp_earned);
       setShowXpGain(true);
-      xpGainTranslateY.value = 0;
-      xpGainOpacity.value = 1;
-      xpGainTranslateY.value = withTiming(-100, { duration: 2000 });
-      xpGainOpacity.value = withTiming(0, { duration: 2000 }, () => {
-        runOnJS(setShowXpGain)(false);
+      xpGainTranslateYAnim.setValue(0);
+      xpGainOpacityAnim.setValue(1);
+      Animated.parallel([
+        Animated.timing(xpGainTranslateYAnim, {
+          toValue: -100,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(xpGainOpacityAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setShowXpGain(false);
       });
 
       // Animate progress bar
       if (data.leveled_up) {
-        progressWidth.value = withSequence(
-          withTiming(100, { duration: 500 }),
-          withTiming(0, { duration: 100 }),
-          withTiming(data.progress.progress_percentage, { duration: 500 })
-        );
+        Animated.sequence([
+          Animated.timing(progressWidthAnim, { toValue: 100, duration: 500, useNativeDriver: false }),
+          Animated.timing(progressWidthAnim, { toValue: 0, duration: 100, useNativeDriver: false }),
+          Animated.timing(progressWidthAnim, { toValue: data.progress.progress_percentage, duration: 500, useNativeDriver: false }),
+        ]).start();
+        setProgressPercent(data.progress.progress_percentage);
 
         setTimeout(() => {
           setLevelUpData({
@@ -767,13 +778,20 @@ export default function Index() {
             oldRank: data.old_rank,
           });
           setShowLevelUp(true);
-          levelUpScale.value = 0;
-          levelUpOpacity.value = 0;
-          levelUpScale.value = withSpring(1, { damping: 10 });
-          levelUpOpacity.value = withTiming(1, { duration: 300 });
+          levelUpScaleAnim.setValue(0);
+          levelUpOpacityAnim.setValue(0);
+          Animated.parallel([
+            Animated.spring(levelUpScaleAnim, { toValue: 1, damping: 10, useNativeDriver: true }),
+            Animated.timing(levelUpOpacityAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+          ]).start();
         }, 700);
       } else {
-        progressWidth.value = withTiming(data.progress.progress_percentage, { duration: 800 });
+        Animated.timing(progressWidthAnim, {
+          toValue: data.progress.progress_percentage,
+          duration: 800,
+          useNativeDriver: false,
+        }).start();
+        setProgressPercent(data.progress.progress_percentage);
       }
 
       // Show trophy unlock if any
@@ -791,9 +809,13 @@ export default function Index() {
   };
 
   const closeLevelUp = () => {
-    levelUpOpacity.value = withTiming(0, { duration: 200 }, () => {
-      runOnJS(setShowLevelUp)(false);
-      runOnJS(setLevelUpData)(null);
+    Animated.timing(levelUpOpacityAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowLevelUp(false);
+      setLevelUpData(null);
     });
   };
 
