@@ -1612,6 +1612,158 @@ export default function Index() {
         </TouchableOpacity>
       </Modal>
 
+      {/* Run Complete Modal */}
+      <Modal
+        visible={showRunComplete}
+        transparent
+        animationType="fade"
+        onRequestClose={closeRunComplete}
+      >
+        <View style={styles.runCompleteOverlay}>
+          <View style={styles.runCompleteModal}>
+            {/* Header */}
+            <View style={styles.runCompleteHeader}>
+              <Text style={styles.runCompleteTitle}>COURSE TERMINÉE</Text>
+              <Text style={styles.runCompleteSubtitle}>Excellent travail !</Text>
+            </View>
+
+            {/* Stats Grid */}
+            <View style={styles.runCompleteStats}>
+              <View style={styles.runCompleteStat}>
+                <Ionicons name="time-outline" size={24} color="#3B82F6" />
+                <Text style={styles.runCompleteStatValue}>
+                  {runCompleteData ? `${Math.floor(runCompleteData.duration / 60)}:${(runCompleteData.duration % 60).toString().padStart(2, '0')}` : '--:--'}
+                </Text>
+                <Text style={styles.runCompleteStatLabel}>Durée</Text>
+              </View>
+              
+              <View style={styles.runCompleteStat}>
+                <Ionicons name="navigate-outline" size={24} color="#10B981" />
+                <Text style={styles.runCompleteStatValue}>
+                  {runCompleteData?.distance?.toFixed(2) || '0.00'} km
+                </Text>
+                <Text style={styles.runCompleteStatLabel}>Distance</Text>
+              </View>
+              
+              <View style={styles.runCompleteStat}>
+                <Ionicons name="speedometer-outline" size={24} color="#F59E0B" />
+                <Text style={styles.runCompleteStatValue}>
+                  {runCompleteData?.avgPace > 0 ? `${Math.floor(runCompleteData.avgPace / 60)}:${Math.floor(runCompleteData.avgPace % 60).toString().padStart(2, '0')}` : '--:--'}
+                </Text>
+                <Text style={styles.runCompleteStatLabel}>Allure /km</Text>
+              </View>
+              
+              <View style={styles.runCompleteStat}>
+                <Ionicons name="flame-outline" size={24} color="#EF4444" />
+                <Text style={styles.runCompleteStatValue}>
+                  {runCompleteData?.calories || 0}
+                </Text>
+                <Text style={styles.runCompleteStatLabel}>Calories</Text>
+              </View>
+            </View>
+
+            {/* XP Section */}
+            <View style={styles.runCompleteXpSection}>
+              <View style={styles.runCompleteXpHeader}>
+                <Text style={styles.runCompleteXpEarned}>+{runCompleteData?.xpEarned || 0} XP</Text>
+                {runCompleteData?.leveledUp && (
+                  <View style={styles.runCompleteLevelUpBadge}>
+                    <Ionicons name="arrow-up" size={14} color="#FFFFFF" />
+                    <Text style={styles.runCompleteLevelUpText}>Niveau {runCompleteData?.newLevel}</Text>
+                  </View>
+                )}
+              </View>
+              
+              {/* XP Bar with Sparkles */}
+              <View style={styles.runCompleteXpBarContainer}>
+                <View style={styles.runCompleteXpBar}>
+                  <Animated.View 
+                    style={[
+                      styles.runCompleteXpFill,
+                      { 
+                        width: runCompleteXpAnim.interpolate({
+                          inputRange: [0, 100],
+                          outputRange: ['0%', '100%'],
+                          extrapolate: 'clamp'
+                        })
+                      }
+                    ]}
+                  />
+                  {/* Sparkles */}
+                  <Animated.View style={[styles.sparkle, styles.sparkle1, { opacity: sparkleOpacity1 }]}>
+                    <Text style={styles.sparkleText}>✦</Text>
+                  </Animated.View>
+                  <Animated.View style={[styles.sparkle, styles.sparkle2, { opacity: sparkleOpacity2 }]}>
+                    <Text style={styles.sparkleText}>✦</Text>
+                  </Animated.View>
+                  <Animated.View style={[styles.sparkle, styles.sparkle3, { opacity: sparkleOpacity3 }]}>
+                    <Text style={styles.sparkleText}>✦</Text>
+                  </Animated.View>
+                </View>
+                <Text style={styles.runCompleteXpRemaining}>
+                  {runCompleteData ? `${runCompleteData.xpForNextLevel - runCompleteData.xpAfter} XP avant le prochain niveau` : ''}
+                </Text>
+              </View>
+            </View>
+
+            {/* Trophies Preview */}
+            {runCompleteData?.trophies?.length > 0 && (
+              <View style={styles.runCompleteTrophiesPreview}>
+                <Text style={styles.runCompleteTrophiesTitle}>
+                  {runCompleteData.trophies.length} trophée{runCompleteData.trophies.length > 1 ? 's' : ''} débloqué{runCompleteData.trophies.length > 1 ? 's' : ''} !
+                </Text>
+                <View style={styles.runCompleteTrophiesIcons}>
+                  {runCompleteData.trophies.slice(0, 3).map((trophy: Trophy) => (
+                    <Text key={trophy.id} style={styles.runCompleteTrophyIcon}>{trophy.icon}</Text>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Continue Button */}
+            <TouchableOpacity style={styles.runCompleteContinueBtn} onPress={closeRunComplete}>
+              <Text style={styles.runCompleteContinueText}>Continuer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Single Trophy Modal */}
+      <Modal
+        visible={showSingleTrophy}
+        transparent
+        animationType="none"
+        onRequestClose={closeTrophyAndContinue}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={closeTrophyAndContinue}
+        >
+          <Animated.View style={[styles.singleTrophyModal, { transform: [{ scale: trophyScaleAnim }] }]}>
+            {runCompleteData?.trophies?.[currentTrophyIndex] && (
+              <>
+                <View style={styles.singleTrophyGlow} />
+                <Text style={styles.singleTrophyIcon}>
+                  {runCompleteData.trophies[currentTrophyIndex].icon}
+                </Text>
+                <Text style={styles.singleTrophyTitle}>TROPHÉE DÉBLOQUÉ</Text>
+                <Text style={styles.singleTrophyName}>
+                  {runCompleteData.trophies[currentTrophyIndex].name}
+                </Text>
+                <Text style={styles.singleTrophyXp}>
+                  +{runCompleteData.trophies[currentTrophyIndex].xp_reward} XP
+                </Text>
+                <Text style={styles.singleTrophyMessage}>
+                  {trophyMessages[Math.floor(Math.random() * trophyMessages.length)]}
+                </Text>
+                <Text style={styles.levelUpTap}>Touchez pour continuer</Text>
+              </>
+            )}
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Username Modal */}
       <Modal
         visible={showUsernameModal}
