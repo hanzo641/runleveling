@@ -1663,13 +1663,26 @@ const styles = StyleSheet.create({
     height: 32,
     backgroundColor: '#2D2D2D',
   },
+  bottomButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  infoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  infoButtonText: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
   settingsButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    marginBottom: 8,
+    gap: 4,
   },
   settingsText: {
     fontSize: 13,
