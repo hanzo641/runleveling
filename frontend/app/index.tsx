@@ -3180,38 +3180,4 @@ const styles = StyleSheet.create({
   rankTimelineAvatarLocked: {
     opacity: 0.4,
   },
-    color: '#9CA3AF',
-    marginBottom: 8,
-  },
-  rankCardLevelLocked: {
-    color: '#6B7280',
-  },
-  rankProgressContainer: {
-    marginTop: 4,
-  },
-  rankProgressBar: {
-    height: 6,
-    backgroundColor: '#2D2D2D',
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: 4,
-  },
-  rankProgressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  rankProgressText: {
-    fontSize: 11,
-    color: '#6B7280',
-  },
-  ranksFooter: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    paddingBottom: 40,
-  },
-  ranksFooterText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-  },
 });
