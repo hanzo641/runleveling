@@ -3006,98 +3006,180 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  // Ranks Modal styles
+  // Ranks Modal styles - Redesigned
   ranksModal: {
     flex: 1,
-    backgroundColor: '#111111',
+    backgroundColor: '#0A0A0A',
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
   },
   ranksHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2D2D2D',
+    alignItems: 'flex-start',
+    paddingHorizontal: 24,
+    paddingBottom: 20,
   },
   ranksTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '800',
     color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
+  ranksLevelIndicator: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  ranksCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1A1A1A',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ranksContent: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
   },
-  ranksSubtitle: {
-    fontSize: 15,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginVertical: 16,
+  // Current rank section
+  currentRankSection: {
+    backgroundColor: '#111111',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#1F1F1F',
   },
-  rankCard: {
+  currentRankLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6B7280',
+    letterSpacing: 1.5,
+    marginBottom: 16,
+  },
+  currentRankDisplay: {
     flexDirection: 'row',
-    backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  rankCardCurrent: {
-    borderColor: '#6366F1',
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-  },
-  rankCardLocked: {
-    opacity: 0.7,
-  },
-  rankCardLeft: {
-    marginRight: 16,
-  },
-  rankAvatarContainer: {
-    position: 'relative',
-  },
-  rankAvatarLocked: {
-    opacity: 0.5,
-  },
-  rankLockOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 30,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  rankCardInfo: {
+  currentRankInfo: {
+    marginLeft: 16,
     flex: 1,
-    justifyContent: 'center',
   },
-  rankCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  rankCardName: {
-    fontSize: 18,
+  currentRankName: {
+    fontSize: 24,
     fontWeight: '700',
   },
-  currentBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  currentBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  rankCardLevel: {
+  currentRankNext: {
     fontSize: 13,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  // Timeline design
+  ranksTimeline: {
+    position: 'relative',
+  },
+  rankTimelineItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingBottom: 24,
+    position: 'relative',
+  },
+  rankTimelineConnector: {
+    position: 'absolute',
+    left: 13,
+    top: 28,
+    width: 2,
+    height: '100%',
+    backgroundColor: '#2D2D2D',
+  },
+  rankTimelineConnectorActive: {
+    backgroundColor: '#4B5563',
+  },
+  rankTimelineNode: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: '#2D2D2D',
+    backgroundColor: '#0A0A0A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  rankTimelineNodeCurrent: {
+    borderWidth: 3,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  rankTimelineNodeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  rankTimelineContent: {
+    flex: 1,
+    marginLeft: 16,
+    paddingTop: 2,
+  },
+  rankTimelineHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  rankTimelineName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  rankTimelineNameLocked: {
+    color: '#4B5563',
+  },
+  rankTimelineLevel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  rankTimelineLevelUnlocked: {
+    color: '#6B7280',
+  },
+  rankCurrentIndicator: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 8,
+  },
+  rankCurrentIndicatorText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  rankTimelineProgress: {
+    marginTop: 10,
+  },
+  rankTimelineProgressBar: {
+    height: 4,
+    backgroundColor: '#1F1F1F',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  rankTimelineProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  rankTimelineAvatar: {
+    marginLeft: 12,
+    opacity: 1,
+  },
+  rankTimelineAvatarLocked: {
+    opacity: 0.4,
+  },
     color: '#9CA3AF',
     marginBottom: 8,
   },
