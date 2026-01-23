@@ -11,7 +11,7 @@ import uuid
 from typing import Dict, Any
 
 # Use the public backend URL from frontend/.env
-BASE_URL = "https://jogxp.preview.emergentagent.com/api"
+BASE_URL = "https://levelup-run.preview.emergentagent.com/api"
 
 class RunQuestAPITester:
     def __init__(self):

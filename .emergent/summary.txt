@@ -1,0 +1,193 @@
+<analysis>
+
+**original_problem_statement:**
+The user wants to create a minimalist and motivating mobile running game called RunLeveling. The core concept is that the player gains experience (XP) by completing real-life running activities, allowing them to level up and achieve higher ranks. The application should be visually simple but provide a strong sense of personal progression.
+
+**PRODUCT REQUIREMENTS:**
+- **Core Gameplay:** A single button to start and stop a running session. Gain XP upon completion.
+- **Progression System:** Levels, XP bar, Ranks (from Débutant to Maître).
+- **XP Calculation:** XP should be based on session duration and intensity. Intensity should be calculated *automatically* based on the user's average pace during the run.
+- **Features:**
+    - Daily quests with XP rewards.
+    - Unlockable trophies/achievements.
+    - A detailed session history, including stats like distance, pace (average/max), speed, and elevation.
+    - A competitive leaderboard.
+    - Push notifications for daily reminders.
+    - GPS integration to track real distance and calculate pace.
+    - Evolving avatars that change visually as the user achieves new ranks.
+- **Integrations:**
+    - Strava integration to automatically sync activities.
+    - Garmin integration (mentioned as a future possibility).
+- **Visuals:**
+    - A custom application icon.
+    - A clean, minimalist interface with smooth animations.
+
+**User's preferred language**: French (français). The next agent MUST respond in French.
+
+**what currently exists?**
+A full-stack mobile application built with Expo (React Native) and a FastAPI backend.
+- The application name is RunLeveling.
+- **Frontend:** A single-screen application with a tab-like navigation system implemented within the main  file. It includes:
+    - Home screen with user stats, an evolving avatar, and the main start/stop button.
+    - Screens/views for Daily Quests, Trophies, Session History, and a Leaderboard.
+    - GPS tracking via  during a session to capture real-time stats.
+    - A detailed session summary modal showing comprehensive stats post-run.
+    - A settings modal for configuring push notifications.
+    - An informational modal explaining the automatic intensity rules.
+    - A custom  component that displays a different SVG avatar based on the user's rank.
+    - A custom app icon and splash screen have been created and configured in .
+- **Backend:** A FastAPI server () with endpoints to manage user progress, sessions, quests, and trophies. It automatically calculates run intensity and XP based on GPS data (or defaults to Moderate if no GPS data is available).
+
+**Last working item**:
+- Last item agent was working: The user requested Strava integration and provided the necessary API keys (Client ID and Client Secret). The agent has acknowledged receipt of these keys and is poised to begin the implementation.
+- Status: NOT STARTED
+- Agent Testing Done: N
+- Which testing method agent to use? both. The backend will need testing for the new Strava API calls and OAuth handling. The frontend will need testing for the user-facing authentication flow.
+- User Testing Done: N
+
+**All Pending/In progress Issue list**:
+There are no known bugs or issues. The pending work consists of new feature implementation.
+
+**In progress Task List**:
+There are no tasks currently in progress. The previous task (creating evolving avatars and the app icon) was completed.
+
+**Upcoming and Future Tasks**
+Upcoming Tasks:
+- **P0: Implement Strava Integration:**
+  - **Goal:** Allow users to connect their Strava account to automatically sync their running activities into RunLeveling.
+  - **Backend ():**
+    - Create new environment variables for the Strava Client ID and Secret.
+    - Implement the Strava OAuth2 authentication flow (, ).
+    - Create an endpoint to handle webhook events from Strava to receive new activities.
+    - Develop logic to process a Strava activity, convert it into a RunLeveling session, calculate XP, and update user progress.
+  - **Frontend ():**
+    - Add a Connect with Strava button in the settings or a dedicated Integrations section.
+    - Use  or a similar tool to open the Strava authorization URL.
+    - Handle the redirect from the Strava callback to complete the authentication flow.
+    - Display the connection status (e.g., Connected to Strava as [username]).
+
+Future Tasks:
+- **P1: Garmin Integration:**
+  - The user has expressed interest in this. It will require a separate investigation and implementation, as Garmin's API access is more restrictive than Strava's.
+
+**Completed work in this session**
+- **RunLeveling MVP:** Initial app with basic start/stop, XP, and leveling.
+- **Feature Expansion:**
+    - Renamed app to RunLeveling.
+    - Added Daily Quests, Trophies, Session History, and Leaderboard.
+    - Implemented new ranks (Débutant, Jogger, etc.).
+- **GPS & Detailed Stats:**
+    - Integrated  for GPS tracking.
+    - Added detailed run statistics (distance, pace, speed, elevation) to the session summary and history.
+    - Implemented  for daily reminders.
+- **Automatic Intensity:**
+    - Removed the manual intensity selector.
+    - The backend now automatically calculates intensity based on the average pace of a run.
+- **Visual Progression:**
+    - Created an evolving  component that changes appearance based on the user's rank.
+    - Designed and implemented a custom app icon () and splash screen ().
+
+**Earlier issues found/mentioned but not fixed**
+None.
+
+**Known issue recurrence from previous fork**
+None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+- **Frontend:** React Native, Expo,  (animations),  (GPS), .
+- **Backend:** FastAPI, Python.
+- **Database:** MongoDB (managed implicitly through the environment).
+- **Architecture:** Monolithic frontend () and monolithic backend ().
+
+**key DB schema**
+- ** collection:**
+    - : string (unique identifier for a user)
+    - : integer
+    - : integer
+    - : integer
+    - : string
+    - : list of strings
+    - : list of strings
+    - : integer
+    - : integer
+    - : number
+    - : integer
+- ** collection:**
+    - : string
+    - : datetime
+    - : datetime
+    - : integer
+    - : string (e.g., Modéré, Intense)
+    - : integer
+    - : number
+    - : number
+    - : list of geo-coordinates
+
+**All files of reference**
+- : Contains all the backend logic, API endpoints, and data models for the application. It was recently modified to support automatic intensity calculation.
+- : The single, comprehensive file for the entire frontend UI and application logic. It was recently modified to remove the intensity picker and integrate the  component.
+- : A new component created to display different SVG-based avatars depending on the user's rank.
+- : The new application icon.
+- : Updated to reference the new application icon and splash screen.
+
+**Areas that need refactoring**:
+- The  file is becoming very large (over 2000 lines). For future scalability, it should be broken down into smaller, reusable components for each major UI section (e.g., , , , ).
+
+**key api endpoints**
+- : Get or create user progress.
+- : Starts a new session timer (currently not used as timing is handled client-side).
+- : Completes a session, calculates intensity and XP, and updates user progress.
+- : Retrieves the top users for the leaderboard.
+
+**Critical Info for New Agent**
+- The immediate and highest priority task is to implement the Strava integration.
+- The user has already provided the **Strava Client ID** and **Client Secret**. You must use these credentials.
+- The implementation should include both the backend OAuth flow and the frontend UI to initiate the connection.
+- After implementing Strava sync, consider refactoring the massive  file into smaller components to improve maintainability.
+
+**documents created in this job**
+- None.
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User:** Requests evolving avatars for each rank and asks about Garmin/Strava integration. (In Progress)
+2.  **Agent:** Confirms avatars are possible and asks for clarification on integrations, suggesting starting with Strava.
+3.  **User:** Agrees to create avatars and asks the agent to create the app icon for the Strava API setup. (Done)
+4.  **Agent:** Acknowledges and proceeds to create the avatars and app icon.
+5.  **... (Agent completes avatar/icon implementation) ...**
+6.  **Agent:** Shows the new avatar and provides instructions for the user to get Strava API keys.
+7.  **User:** Provides the Strava **Client ID (197562)** and **Client Secret (5c6e8ae75e1f35cdda8215afbe2fe74e1c0dae19)**. (PENDING ACTION)
+8.  **Agent:** Acknowledges receipt of the keys and states they will now begin the Strava integration. (Last action)
+
+**Project Health Check:**
+- **Broken:** None.
+- **Mocked:** The GPS data is mocked in the web preview environment (returns  or ), which causes the automatic intensity to default to Modéré. This is expected behavior and will work correctly on a mobile device with Expo Go.
+
+**3rd Party Integrations**
+- : Used for GPS tracking.
+- : Used for scheduling push notifications.
+- **Strava API (Pending Implementation):** User has provided the following credentials:
+    - **Client ID:** 
+    - **Client Secret:** 
+
+**Testing status**
+- Testing agent used after significant changes: NO (Testing was performed manually via  and ).
+- Troubleshoot agent used after agent stuck in loop: NO.
+- Test files created: None.
+- Known regressions: None.
+
+**Credentials to test flow:**
+- **Strava API:**
+  - **Client ID:** 
+  - **Client Secret:** 
+
+**What agent forgot to execute**
+The agent has successfully addressed all user requests up to this point. The next step is to act on the most recent request: implementing Strava integration using the keys provided by the user.
+
+</analysis>
+<SYS_PROMPT_SEPARATOR>
+<workspace_dir>
+/app
+</workspace_dir>
