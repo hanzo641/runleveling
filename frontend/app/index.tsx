@@ -1077,7 +1077,7 @@ export default function Index() {
               <Text style={styles.questCompletedText}>Complétée!</Text>
             </View>
           )}
-        </Animated.View>
+        </View>
       ))}
     </ScrollView>
   );
