@@ -14,6 +14,8 @@ import {
   FlatList,
   TextInput,
   KeyboardAvoidingView,
+  Alert,
+  Switch,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -24,15 +26,24 @@ import Animated, {
   withRepeat,
   runOnJS,
   FadeIn,
-  FadeOut,
-  SlideInUp,
   SlideInRight,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+// Configure notifications
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 // Generate a unique device ID
 const getDeviceId = () => {
@@ -85,23 +96,37 @@ interface UserProgress {
   next_rank: Rank | null;
   sessions_completed: number;
   total_duration_minutes: number;
+  total_distance_km: number;
   current_streak: number;
   best_streak: number;
   progress_percentage: number;
   trophies_unlocked: string[];
   daily_quests: Quest[];
+  best_pace: string | null;
+  notification_enabled: boolean;
+  notification_time: string;
 }
 
-interface Session {
+interface SessionDetail {
   id: string;
   duration_minutes: number;
+  duration_seconds: number;
   intensity: string;
   intensity_name: string;
   xp_earned: number;
-  level_before: number;
-  level_after: number;
+  distance_km: number;
+  avg_pace: string;
+  max_pace: string;
+  min_pace: string;
+  avg_speed_kmh: number;
+  max_speed_kmh: number;
+  elevation_gain: number;
+  elevation_loss: number;
+  calories_burned: number;
   leveled_up: boolean;
+  level_after: number;
   completed_at: string;
+  route_points: any[];
 }
 
 interface LeaderboardEntry {
@@ -111,6 +136,7 @@ interface LeaderboardEntry {
   total_xp: number;
   player_rank: Rank;
   sessions_completed: number;
+  total_distance_km: number;
   is_current_user: boolean;
 }
 
@@ -126,6 +152,14 @@ interface SessionResponse {
   quests_completed: Quest[];
 }
 
+interface LocationPoint {
+  latitude: number;
+  longitude: number;
+  altitude: number | null;
+  speed: number | null;
+  timestamp: number;
+}
+
 const INTENSITY_OPTIONS = [
   { id: 'light', name: 'Léger', icon: 'walk-outline', color: '#10B981' },
   { id: 'moderate', name: 'Modéré', icon: 'fitness-outline', color: '#3B82F6' },
@@ -134,6 +168,34 @@ const INTENSITY_OPTIONS = [
 ];
 
 type TabType = 'home' | 'quests' | 'trophies' | 'history' | 'leaderboard';
+
+// Calculate distance between two GPS points (Haversine formula)
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// Format pace as mm:ss
+const formatPace = (secondsPerKm: number): string => {
+  if (secondsPerKm <= 0 || !isFinite(secondsPerKm)) return '--:--';
+  const minutes = Math.floor(secondsPerKm / 60);
+  const seconds = Math.floor(secondsPerKm % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+// Estimate calories burned (rough estimation)
+const estimateCalories = (durationMinutes: number, distanceKm: number, intensity: string): number => {
+  const baseCal = durationMinutes * 8; // ~8 cal/min base
+  const distanceCal = distanceKm * 60; // ~60 cal/km
+  const intensityMult = { light: 0.8, moderate: 1.0, intense: 1.2, extreme: 1.4 }[intensity] || 1.0;
+  return Math.round((baseCal + distanceCal) * intensityMult);
+};
 
 export default function Index() {
   const [progress, setProgress] = useState<UserProgress | null>(null);
@@ -146,16 +208,34 @@ export default function Index() {
   const [xpGained, setXpGained] = useState(0);
   const [showXpGain, setShowXpGain] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('home');
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<SessionDetail[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [allTrophies, setAllTrophies] = useState<{ unlocked: Trophy[]; locked: Trophy[] }>({ unlocked: [], locked: [] });
   const [showIntensityPicker, setShowIntensityPicker] = useState(false);
   const [showTrophyUnlock, setShowTrophyUnlock] = useState(false);
   const [unlockedTrophies, setUnlockedTrophies] = useState<Trophy[]>([]);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSessionDetail, setShowSessionDetail] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
   const [newUsername, setNewUsername] = useState('');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationTime, setNotificationTime] = useState('08:00');
+
+  // GPS tracking state
+  const [locationPermission, setLocationPermission] = useState(false);
+  const [currentDistance, setCurrentDistance] = useState(0);
+  const [currentSpeed, setCurrentSpeed] = useState(0);
+  const [currentPace, setCurrentPace] = useState(0);
+  const [maxSpeed, setMaxSpeed] = useState(0);
+  const [elevationGain, setElevationGain] = useState(0);
+  const [elevationLoss, setElevationLoss] = useState(0);
+  const [routePoints, setRoutePoints] = useState<LocationPoint[]>([]);
+  const [paces, setPaces] = useState<number[]>([]);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
+  const lastLocation = useRef<LocationPoint | null>(null);
   const deviceId = useRef(getDeviceId());
 
   // Animation values
@@ -167,12 +247,57 @@ export default function Index() {
   const xpGainOpacity = useSharedValue(0);
   const pulseScale = useSharedValue(1);
 
+  // Request permissions
+  useEffect(() => {
+    requestPermissions();
+  }, []);
+
+  const requestPermissions = async () => {
+    // Location permission
+    const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
+    setLocationPermission(locationStatus === 'granted');
+
+    // Notification permission
+    if (Platform.OS !== 'web') {
+      const { status: notifStatus } = await Notifications.requestPermissionsAsync();
+      if (notifStatus === 'granted') {
+        setupDailyNotification();
+      }
+    }
+  };
+
+  const setupDailyNotification = async () => {
+    if (Platform.OS === 'web') return;
+    
+    // Cancel existing notifications
+    await Notifications.cancelAllScheduledNotificationsAsync();
+
+    if (notificationsEnabled) {
+      const [hours, minutes] = notificationTime.split(':').map(Number);
+      
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🏃 RunLeveling',
+          body: 'C\'est l\'heure de ta course quotidienne ! Ne perds pas ta streak !',
+          sound: true,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour: hours,
+          minute: minutes,
+        },
+      });
+    }
+  };
+
   // Fetch user progress
   const fetchProgress = useCallback(async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/progress/${deviceId.current}`);
       const data = await response.json();
       setProgress(data);
+      setNotificationsEnabled(data.notification_enabled);
+      setNotificationTime(data.notification_time);
       progressWidth.value = withTiming(data.progress_percentage, { duration: 800 });
     } catch (error) {
       console.error('Error fetching progress:', error);
@@ -221,6 +346,86 @@ export default function Index() {
     if (activeTab === 'trophies') fetchTrophies();
   }, [activeTab]);
 
+  // Start GPS tracking
+  const startLocationTracking = async () => {
+    if (!locationPermission) {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission refusée', 'Le GPS est nécessaire pour tracker ta course.');
+        return;
+      }
+      setLocationPermission(true);
+    }
+
+    locationSubscription.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.BestForNavigation,
+        timeInterval: 1000,
+        distanceInterval: 5,
+      },
+      (location) => {
+        const newPoint: LocationPoint = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          altitude: location.coords.altitude,
+          speed: location.coords.speed,
+          timestamp: location.timestamp,
+        };
+
+        // Calculate distance from last point
+        if (lastLocation.current) {
+          const dist = calculateDistance(
+            lastLocation.current.latitude,
+            lastLocation.current.longitude,
+            newPoint.latitude,
+            newPoint.longitude
+          );
+          
+          if (dist > 0.001) { // Minimum 1m to count
+            setCurrentDistance((prev) => prev + dist);
+            
+            // Calculate pace (seconds per km)
+            const timeDiff = (newPoint.timestamp - lastLocation.current.timestamp) / 1000;
+            if (dist > 0 && timeDiff > 0) {
+              const pace = (timeDiff / dist); // seconds per km
+              if (pace > 0 && pace < 1800) { // Valid pace (< 30 min/km)
+                setPaces((prev) => [...prev, pace]);
+                setCurrentPace(pace);
+              }
+            }
+
+            // Elevation tracking
+            if (newPoint.altitude && lastLocation.current.altitude) {
+              const elevDiff = newPoint.altitude - lastLocation.current.altitude;
+              if (elevDiff > 0) {
+                setElevationGain((prev) => prev + elevDiff);
+              } else {
+                setElevationLoss((prev) => prev + Math.abs(elevDiff));
+              }
+            }
+          }
+        }
+
+        // Update speed
+        if (newPoint.speed && newPoint.speed > 0) {
+          const speedKmh = newPoint.speed * 3.6;
+          setCurrentSpeed(speedKmh);
+          setMaxSpeed((prev) => Math.max(prev, speedKmh));
+        }
+
+        lastLocation.current = newPoint;
+        setRoutePoints((prev) => [...prev, newPoint]);
+      }
+    );
+  };
+
+  const stopLocationTracking = () => {
+    if (locationSubscription.current) {
+      locationSubscription.current.remove();
+      locationSubscription.current = null;
+    }
+  };
+
   // Timer for running session
   useEffect(() => {
     if (isRunning) {
@@ -251,8 +456,12 @@ export default function Index() {
   }, [isRunning]);
 
   const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -273,9 +482,24 @@ export default function Index() {
     setShowIntensityPicker(true);
   };
 
-  const confirmStartSession = (intensity: string) => {
+  const confirmStartSession = async (intensity: string) => {
     setSelectedIntensity(intensity);
     setShowIntensityPicker(false);
+    
+    // Reset GPS data
+    setCurrentDistance(0);
+    setCurrentSpeed(0);
+    setCurrentPace(0);
+    setMaxSpeed(0);
+    setElevationGain(0);
+    setElevationLoss(0);
+    setRoutePoints([]);
+    setPaces([]);
+    lastLocation.current = null;
+    
+    // Start tracking
+    await startLocationTracking();
+    
     setIsRunning(true);
     setSessionDuration(0);
     buttonScale.value = withSequence(withSpring(0.9), withSpring(1));
@@ -286,8 +510,23 @@ export default function Index() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
     setIsRunning(false);
+    stopLocationTracking();
 
-    const durationMinutes = Math.max(1, Math.ceil(sessionDuration / 60));
+    const durationMinutes = Math.floor(sessionDuration / 60);
+    const durationSeconds = sessionDuration % 60;
+    
+    // Calculate stats
+    const avgPace = paces.length > 0 ? paces.reduce((a, b) => a + b, 0) / paces.length : 0;
+    const minPace = paces.length > 0 ? Math.min(...paces) : 0; // Best pace
+    const maxPaceVal = paces.length > 0 ? Math.max(...paces) : 0; // Worst pace
+    const avgSpeed = currentDistance > 0 && sessionDuration > 0 ? (currentDistance / sessionDuration) * 3600 : 0;
+    const calories = estimateCalories(durationMinutes, currentDistance, selectedIntensity);
+
+    // Simplify route for storage (every 10th point)
+    const simplifiedRoute = routePoints.filter((_, i) => i % 10 === 0).map(p => ({
+      lat: p.latitude,
+      lng: p.longitude
+    }));
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/session/complete`, {
@@ -296,7 +535,18 @@ export default function Index() {
         body: JSON.stringify({
           device_id: deviceId.current,
           duration_minutes: durationMinutes,
+          duration_seconds: durationSeconds,
           intensity: selectedIntensity,
+          distance_km: currentDistance,
+          avg_pace_seconds: avgPace,
+          max_pace_seconds: minPace, // Best pace (lowest time)
+          min_pace_seconds: maxPaceVal, // Worst pace (highest time)
+          avg_speed_kmh: avgSpeed,
+          max_speed_kmh: maxSpeed,
+          elevation_gain: elevationGain,
+          elevation_loss: elevationLoss,
+          calories_burned: calories,
+          route_points: simplifiedRoute,
         }),
       });
 
@@ -378,6 +628,25 @@ export default function Index() {
     }
   };
 
+  const updateNotificationSettings = async (enabled: boolean, time: string) => {
+    try {
+      await fetch(`${BACKEND_URL}/api/notifications`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          device_id: deviceId.current,
+          enabled,
+          time,
+        }),
+      });
+      setNotificationsEnabled(enabled);
+      setNotificationTime(time);
+      setupDailyNotification();
+    } catch (error) {
+      console.error('Error updating notifications:', error);
+    }
+  };
+
   // Animated styles
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
@@ -454,13 +723,21 @@ export default function Index() {
         </View>
       </View>
 
-      {/* Streak */}
-      {progress && progress.current_streak > 0 && (
-        <View style={styles.streakContainer}>
-          <Ionicons name="flame" size={20} color="#F59E0B" />
-          <Text style={styles.streakText}>{progress.current_streak} jours de suite</Text>
-        </View>
-      )}
+      {/* Streak & Best Pace */}
+      <View style={styles.streakRow}>
+        {progress && progress.current_streak > 0 && (
+          <View style={styles.streakContainer}>
+            <Ionicons name="flame" size={18} color="#F59E0B" />
+            <Text style={styles.streakText}>{progress.current_streak}j</Text>
+          </View>
+        )}
+        {progress?.best_pace && (
+          <View style={styles.streakContainer}>
+            <Ionicons name="speedometer" size={18} color="#10B981" />
+            <Text style={[styles.streakText, { color: '#10B981' }]}>{progress.best_pace}/km</Text>
+          </View>
+        )}
+      </View>
 
       {/* XP Gain Animation */}
       {showXpGain && (
@@ -469,15 +746,34 @@ export default function Index() {
         </Animated.View>
       )}
 
-      {/* Session Timer */}
+      {/* Live GPS Stats (when running) */}
       {isRunning && (
-        <View style={styles.timerContainer}>
-          <Ionicons name="timer-outline" size={24} color="#6366F1" />
-          <Text style={styles.timerText}>{formatDuration(sessionDuration)}</Text>
-          <View style={[styles.intensityBadge, { backgroundColor: INTENSITY_OPTIONS.find(i => i.id === selectedIntensity)?.color }]}>
-            <Text style={styles.intensityBadgeText}>
-              {INTENSITY_OPTIONS.find(i => i.id === selectedIntensity)?.name}
-            </Text>
+        <View style={styles.liveStatsContainer}>
+          <View style={styles.liveStatRow}>
+            <View style={styles.liveStat}>
+              <Ionicons name="navigate" size={20} color="#3B82F6" />
+              <Text style={styles.liveStatValue}>{currentDistance.toFixed(2)}</Text>
+              <Text style={styles.liveStatLabel}>km</Text>
+            </View>
+            <View style={styles.liveStat}>
+              <Ionicons name="speedometer" size={20} color="#10B981" />
+              <Text style={styles.liveStatValue}>{formatPace(currentPace)}</Text>
+              <Text style={styles.liveStatLabel}>/km</Text>
+            </View>
+            <View style={styles.liveStat}>
+              <Ionicons name="flash" size={20} color="#F59E0B" />
+              <Text style={styles.liveStatValue}>{currentSpeed.toFixed(1)}</Text>
+              <Text style={styles.liveStatLabel}>km/h</Text>
+            </View>
+          </View>
+          <View style={styles.timerContainer}>
+            <Ionicons name="timer-outline" size={24} color="#6366F1" />
+            <Text style={styles.timerText}>{formatDuration(sessionDuration)}</Text>
+            <View style={[styles.intensityBadge, { backgroundColor: INTENSITY_OPTIONS.find(i => i.id === selectedIntensity)?.color }]}>
+              <Text style={styles.intensityBadgeText}>
+                {INTENSITY_OPTIONS.find(i => i.id === selectedIntensity)?.name}
+              </Text>
+            </View>
           </View>
         </View>
       )}
@@ -514,17 +810,23 @@ export default function Index() {
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Ionicons name="time-outline" size={20} color="#9CA3AF" />
-          <Text style={styles.statValue}>{progress?.total_duration_minutes || 0}</Text>
-          <Text style={styles.statLabel}>Minutes</Text>
+          <Ionicons name="navigate-outline" size={20} color="#9CA3AF" />
+          <Text style={styles.statValue}>{(progress?.total_distance_km || 0).toFixed(1)}</Text>
+          <Text style={styles.statLabel}>km</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Ionicons name="star-outline" size={20} color="#9CA3AF" />
           <Text style={styles.statValue}>{progress?.total_xp || 0}</Text>
-          <Text style={styles.statLabel}>XP Total</Text>
+          <Text style={styles.statLabel}>XP</Text>
         </View>
       </View>
+
+      {/* Settings Button */}
+      <TouchableOpacity style={styles.settingsButton} onPress={() => setShowSettingsModal(true)}>
+        <Ionicons name="settings-outline" size={20} color="#6B7280" />
+        <Text style={styles.settingsText}>Paramètres</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 
@@ -567,7 +869,7 @@ export default function Index() {
               />
             </View>
             <Text style={styles.questProgressText}>
-              {quest.progress}/{quest.target}
+              {typeof quest.target === 'number' ? `${Math.min(quest.progress, quest.target)}/${quest.target}` : quest.completed ? '✓' : '○'}
             </Text>
           </View>
 
@@ -615,7 +917,7 @@ export default function Index() {
       {allTrophies.locked.length > 0 && (
         <>
           <Text style={styles.trophySection}>À Débloquer</Text>
-          {allTrophies.locked.map((trophy, index) => (
+          {allTrophies.locked.map((trophy) => (
             <View key={trophy.id} style={[styles.trophyCard, styles.trophyLocked]}>
               <Text style={[styles.trophyIcon, { opacity: 0.3 }]}>{trophy.icon}</Text>
               <View style={styles.trophyInfo}>
@@ -632,53 +934,67 @@ export default function Index() {
     </ScrollView>
   );
 
-  // Render History Tab
+  // Render History Tab with detailed session info
   const renderHistoryTab = () => (
     <View style={styles.tabContent}>
       <Text style={styles.sectionTitle}>Historique</Text>
-      <Text style={styles.sectionSubtitle}>{sessions.length} sessions enregistrées</Text>
+      <Text style={styles.sectionSubtitle}>{sessions.length} courses enregistrées</Text>
 
       <FlatList
         data={sessions}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => (
-          <Animated.View
-            entering={SlideInRight.delay(index * 50)}
-            style={styles.historyCard}
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedSession(item);
+              setShowSessionDetail(true);
+            }}
           >
-            <View style={styles.historyHeader}>
-              <View style={styles.historyDate}>
-                <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
-                <Text style={styles.historyDateText}>{formatDate(item.completed_at)}</Text>
-              </View>
-              <View style={[
-                styles.historyIntensity,
-                { backgroundColor: INTENSITY_OPTIONS.find(i => i.id === item.intensity)?.color || '#6B7280' }
-              ]}>
-                <Text style={styles.historyIntensityText}>{item.intensity_name}</Text>
-              </View>
-            </View>
-
-            <View style={styles.historyStats}>
-              <View style={styles.historyStat}>
-                <Ionicons name="time-outline" size={18} color="#6366F1" />
-                <Text style={styles.historyStatValue}>{item.duration_minutes} min</Text>
-              </View>
-              <View style={styles.historyStat}>
-                <Ionicons name="star" size={18} color="#F59E0B" />
-                <Text style={styles.historyStatValue}>+{item.xp_earned} XP</Text>
-              </View>
-              {item.leveled_up && (
-                <View style={styles.historyStat}>
-                  <Ionicons name="arrow-up-circle" size={18} color="#10B981" />
-                  <Text style={[styles.historyStatValue, { color: '#10B981' }]}>
-                    Niv. {item.level_after}
-                  </Text>
+            <Animated.View
+              entering={SlideInRight.delay(index * 50)}
+              style={styles.historyCard}
+            >
+              <View style={styles.historyHeader}>
+                <View style={styles.historyDate}>
+                  <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
+                  <Text style={styles.historyDateText}>{formatDate(item.completed_at)}</Text>
                 </View>
-              )}
-            </View>
-          </Animated.View>
+                <View style={[
+                  styles.historyIntensity,
+                  { backgroundColor: INTENSITY_OPTIONS.find(i => i.id === item.intensity)?.color || '#6B7280' }
+                ]}>
+                  <Text style={styles.historyIntensityText}>{item.intensity_name}</Text>
+                </View>
+              </View>
+
+              <View style={styles.historyStats}>
+                <View style={styles.historyStat}>
+                  <Ionicons name="navigate" size={16} color="#3B82F6" />
+                  <Text style={styles.historyStatValue}>{item.distance_km.toFixed(2)} km</Text>
+                </View>
+                <View style={styles.historyStat}>
+                  <Ionicons name="time-outline" size={16} color="#6366F1" />
+                  <Text style={styles.historyStatValue}>{item.duration_minutes}:{(item.duration_seconds || 0).toString().padStart(2, '0')}</Text>
+                </View>
+                <View style={styles.historyStat}>
+                  <Ionicons name="speedometer" size={16} color="#10B981" />
+                  <Text style={styles.historyStatValue}>{item.avg_pace}/km</Text>
+                </View>
+              </View>
+
+              <View style={styles.historyFooter}>
+                <Text style={styles.historyXp}>+{item.xp_earned} XP</Text>
+                {item.leveled_up && (
+                  <View style={styles.levelUpBadgeSmall}>
+                    <Ionicons name="arrow-up" size={12} color="#10B981" />
+                    <Text style={styles.levelUpBadgeText}>Niv. {item.level_after}</Text>
+                  </View>
+                )}
+                <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+              </View>
+            </Animated.View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={styles.emptyState}>
@@ -720,7 +1036,7 @@ export default function Index() {
             </View>
 
             <View style={[styles.leaderboardBadge, { backgroundColor: item.player_rank.color }]}>
-              <Text style={styles.leaderboardBadgeText}>{item.player_rank.icon}</Text>
+              <Text style={styles.leaderboardBadgeIcon}>{item.player_rank.icon}</Text>
             </View>
 
             <View style={styles.leaderboardInfo}>
@@ -731,13 +1047,11 @@ export default function Index() {
                 {item.username} {item.is_current_user && '(Toi)'}
               </Text>
               <Text style={styles.leaderboardStats}>
-                Niv. {item.level} • {item.total_xp} XP
+                Niv. {item.level} • {item.total_distance_km} km
               </Text>
             </View>
 
-            <Text style={styles.leaderboardSessions}>
-              {item.sessions_completed}
-            </Text>
+            <Text style={styles.leaderboardXp}>{item.total_xp}</Text>
           </Animated.View>
         )}
         ListEmptyComponent={
@@ -768,56 +1082,25 @@ export default function Index() {
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={[styles.navItem, activeTab === 'home' && styles.navItemActive]}
-          onPress={() => setActiveTab('home')}
-        >
-          <Ionicons
-            name={activeTab === 'home' ? 'home' : 'home-outline'}
-            size={24}
-            color={activeTab === 'home' ? '#6366F1' : '#6B7280'}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.navItem, activeTab === 'quests' && styles.navItemActive]}
-          onPress={() => setActiveTab('quests')}
-        >
-          <Ionicons
-            name={activeTab === 'quests' ? 'flag' : 'flag-outline'}
-            size={24}
-            color={activeTab === 'quests' ? '#6366F1' : '#6B7280'}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.navItem, activeTab === 'trophies' && styles.navItemActive]}
-          onPress={() => setActiveTab('trophies')}
-        >
-          <Ionicons
-            name={activeTab === 'trophies' ? 'trophy' : 'trophy-outline'}
-            size={24}
-            color={activeTab === 'trophies' ? '#6366F1' : '#6B7280'}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.navItem, activeTab === 'history' && styles.navItemActive]}
-          onPress={() => setActiveTab('history')}
-        >
-          <Ionicons
-            name={activeTab === 'history' ? 'time' : 'time-outline'}
-            size={24}
-            color={activeTab === 'history' ? '#6366F1' : '#6B7280'}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.navItem, activeTab === 'leaderboard' && styles.navItemActive]}
-          onPress={() => setActiveTab('leaderboard')}
-        >
-          <Ionicons
-            name={activeTab === 'leaderboard' ? 'podium' : 'podium-outline'}
-            size={24}
-            color={activeTab === 'leaderboard' ? '#6366F1' : '#6B7280'}
-          />
-        </TouchableOpacity>
+        {[
+          { id: 'home', icon: 'home' },
+          { id: 'quests', icon: 'flag' },
+          { id: 'trophies', icon: 'trophy' },
+          { id: 'history', icon: 'time' },
+          { id: 'leaderboard', icon: 'podium' },
+        ].map((tab) => (
+          <TouchableOpacity
+            key={tab.id}
+            style={[styles.navItem, activeTab === tab.id && styles.navItemActive]}
+            onPress={() => setActiveTab(tab.id as TabType)}
+          >
+            <Ionicons
+              name={activeTab === tab.id ? tab.icon as any : `${tab.icon}-outline` as any}
+              size={24}
+              color={activeTab === tab.id ? '#6366F1' : '#6B7280'}
+            />
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Intensity Picker Modal */}
@@ -852,6 +1135,110 @@ export default function Index() {
         </TouchableOpacity>
       </Modal>
 
+      {/* Session Detail Modal */}
+      <Modal
+        visible={showSessionDetail}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSessionDetail(false)}
+      >
+        <View style={styles.sessionDetailModal}>
+          <View style={styles.sessionDetailHeader}>
+            <Text style={styles.sessionDetailTitle}>Détails de la course</Text>
+            <TouchableOpacity onPress={() => setShowSessionDetail(false)}>
+              <Ionicons name="close" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+
+          {selectedSession && (
+            <ScrollView style={styles.sessionDetailContent}>
+              <View style={styles.sessionDetailSection}>
+                <Text style={styles.sessionDetailDate}>
+                  {formatDate(selectedSession.completed_at)}
+                </Text>
+                <View style={[
+                  styles.sessionDetailIntensity,
+                  { backgroundColor: INTENSITY_OPTIONS.find(i => i.id === selectedSession.intensity)?.color }
+                ]}>
+                  <Text style={styles.sessionDetailIntensityText}>{selectedSession.intensity_name}</Text>
+                </View>
+              </View>
+
+              <View style={styles.sessionDetailGrid}>
+                <View style={styles.sessionDetailStat}>
+                  <Ionicons name="navigate" size={24} color="#3B82F6" />
+                  <Text style={styles.sessionDetailStatValue}>{selectedSession.distance_km.toFixed(2)}</Text>
+                  <Text style={styles.sessionDetailStatLabel}>km parcourus</Text>
+                </View>
+                <View style={styles.sessionDetailStat}>
+                  <Ionicons name="time" size={24} color="#6366F1" />
+                  <Text style={styles.sessionDetailStatValue}>
+                    {selectedSession.duration_minutes}:{(selectedSession.duration_seconds || 0).toString().padStart(2, '0')}
+                  </Text>
+                  <Text style={styles.sessionDetailStatLabel}>durée</Text>
+                </View>
+                <View style={styles.sessionDetailStat}>
+                  <Ionicons name="speedometer" size={24} color="#10B981" />
+                  <Text style={styles.sessionDetailStatValue}>{selectedSession.avg_pace}</Text>
+                  <Text style={styles.sessionDetailStatLabel}>allure moy.</Text>
+                </View>
+                <View style={styles.sessionDetailStat}>
+                  <Ionicons name="flash" size={24} color="#F59E0B" />
+                  <Text style={styles.sessionDetailStatValue}>{selectedSession.max_pace}</Text>
+                  <Text style={styles.sessionDetailStatLabel}>meilleure allure</Text>
+                </View>
+                <View style={styles.sessionDetailStat}>
+                  <Ionicons name="rocket" size={24} color="#EF4444" />
+                  <Text style={styles.sessionDetailStatValue}>{selectedSession.max_speed_kmh.toFixed(1)}</Text>
+                  <Text style={styles.sessionDetailStatLabel}>vitesse max km/h</Text>
+                </View>
+                <View style={styles.sessionDetailStat}>
+                  <Ionicons name="trending-up" size={24} color="#8B5CF6" />
+                  <Text style={styles.sessionDetailStatValue}>{selectedSession.avg_speed_kmh.toFixed(1)}</Text>
+                  <Text style={styles.sessionDetailStatLabel}>vitesse moy. km/h</Text>
+                </View>
+              </View>
+
+              <View style={styles.sessionDetailSection}>
+                <Text style={styles.sessionDetailSectionTitle}>Dénivelé</Text>
+                <View style={styles.sessionDetailRow}>
+                  <View style={styles.sessionDetailRowItem}>
+                    <Ionicons name="arrow-up" size={20} color="#10B981" />
+                    <Text style={styles.sessionDetailRowValue}>+{selectedSession.elevation_gain.toFixed(0)} m</Text>
+                  </View>
+                  <View style={styles.sessionDetailRowItem}>
+                    <Ionicons name="arrow-down" size={20} color="#EF4444" />
+                    <Text style={styles.sessionDetailRowValue}>-{selectedSession.elevation_loss.toFixed(0)} m</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.sessionDetailSection}>
+                <Text style={styles.sessionDetailSectionTitle}>Calories</Text>
+                <View style={styles.sessionDetailRow}>
+                  <Ionicons name="flame" size={24} color="#F59E0B" />
+                  <Text style={styles.sessionDetailCalories}>{selectedSession.calories_burned} kcal</Text>
+                </View>
+              </View>
+
+              <View style={styles.sessionDetailSection}>
+                <Text style={styles.sessionDetailSectionTitle}>Récompenses</Text>
+                <View style={styles.sessionDetailRow}>
+                  <Ionicons name="star" size={24} color="#F59E0B" />
+                  <Text style={styles.sessionDetailXp}>+{selectedSession.xp_earned} XP</Text>
+                  {selectedSession.leveled_up && (
+                    <View style={styles.sessionDetailLevelUp}>
+                      <Ionicons name="arrow-up-circle" size={20} color="#10B981" />
+                      <Text style={styles.sessionDetailLevelUpText}>Niveau {selectedSession.level_after}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </ScrollView>
+          )}
+        </View>
+      </Modal>
+
       {/* Level Up Modal */}
       <Modal
         visible={showLevelUp}
@@ -868,8 +1255,8 @@ export default function Index() {
             <View style={styles.levelUpContent}>
               {levelUpData?.rankedUp ? (
                 <>
-                  <View style={[styles.levelUpBadge, { backgroundColor: levelUpData.rank.color }]}>
-                    <Text style={styles.levelUpBadgeIcon}>{levelUpData.rank.icon}</Text>
+                  <View style={[styles.levelUpBadgeBig, { backgroundColor: levelUpData.rank.color }]}>
+                    <Text style={styles.levelUpBadgeIconBig}>{levelUpData.rank.icon}</Text>
                   </View>
                   <Text style={styles.levelUpTitle}>NOUVEAU RANG!</Text>
                   <Text style={[styles.levelUpRankName, { color: levelUpData.rank.color }]}>
@@ -956,6 +1343,74 @@ export default function Index() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Settings Modal */}
+      <Modal
+        visible={showSettingsModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSettingsModal(false)}
+      >
+        <View style={styles.settingsModal}>
+          <View style={styles.settingsHeader}>
+            <Text style={styles.settingsTitle}>Paramètres</Text>
+            <TouchableOpacity onPress={() => setShowSettingsModal(false)}>
+              <Ionicons name="close" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.settingsContent}>
+            <View style={styles.settingItem}>
+              <View style={styles.settingInfo}>
+                <Ionicons name="notifications" size={24} color="#6366F1" />
+                <Text style={styles.settingLabel}>Rappel quotidien</Text>
+              </View>
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={(value) => updateNotificationSettings(value, notificationTime)}
+                trackColor={{ false: '#3D3D3D', true: '#6366F1' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            {notificationsEnabled && (
+              <View style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <Ionicons name="time" size={24} color="#9CA3AF" />
+                  <Text style={styles.settingLabel}>Heure du rappel</Text>
+                </View>
+                <View style={styles.timePickerRow}>
+                  {['07:00', '08:00', '09:00', '18:00', '19:00'].map((time) => (
+                    <TouchableOpacity
+                      key={time}
+                      style={[
+                        styles.timePill,
+                        notificationTime === time && styles.timePillActive
+                      ]}
+                      onPress={() => updateNotificationSettings(notificationsEnabled, time)}
+                    >
+                      <Text style={[
+                        styles.timePillText,
+                        notificationTime === time && styles.timePillTextActive
+                      ]}>{time}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            <View style={styles.settingItem}>
+              <View style={styles.settingInfo}>
+                <Ionicons name="location" size={24} color="#10B981" />
+                <Text style={styles.settingLabel}>GPS</Text>
+              </View>
+              <Text style={[styles.settingStatus, { color: locationPermission ? '#10B981' : '#EF4444' }]}>
+                {locationPermission ? 'Activé' : 'Désactivé'}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -980,10 +1435,10 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   appTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 2,
@@ -994,25 +1449,25 @@ const styles = StyleSheet.create({
   },
   rankContainer: {
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 8,
   },
   rankBadge: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rankIcon: {
-    fontSize: 36,
+    fontSize: 32,
   },
   rankName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    marginTop: 6,
+    marginTop: 4,
   },
   username: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#9CA3AF',
     marginTop: 2,
   },
@@ -1023,48 +1478,52 @@ const styles = StyleSheet.create({
   },
   levelContainer: {
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 12,
   },
   levelLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#6B7280',
     fontWeight: '600',
     letterSpacing: 2,
   },
   levelNumber: {
-    fontSize: 56,
+    fontSize: 48,
     fontWeight: '900',
     color: '#FFFFFF',
-    marginTop: -6,
+    marginTop: -4,
   },
   progressContainer: {
     paddingHorizontal: 16,
-    marginTop: 8,
+    marginTop: 4,
   },
   progressBackground: {
-    height: 10,
+    height: 8,
     backgroundColor: '#1F1F1F',
-    borderRadius: 5,
+    borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 5,
+    borderRadius: 4,
   },
   xpTextContainer: {
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 4,
   },
   xpText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#9CA3AF',
     fontWeight: '600',
+  },
+  streakRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    marginTop: 6,
   },
   streakContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
     gap: 4,
   },
   streakText: {
@@ -1074,24 +1533,49 @@ const styles = StyleSheet.create({
   },
   xpGainContainer: {
     position: 'absolute',
-    top: '35%',
+    top: '30%',
     left: 0,
     right: 0,
     alignItems: 'center',
+    zIndex: 100,
   },
   xpGainText: {
     fontSize: 28,
     fontWeight: '900',
   },
+  liveStatsContainer: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 12,
+    marginHorizontal: 8,
+  },
+  liveStatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 12,
+  },
+  liveStat: {
+    alignItems: 'center',
+  },
+  liveStatValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginTop: 4,
+  },
+  liveStatLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+  },
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
     gap: 8,
   },
   timerText: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: '#FFFFFF',
     fontVariant: ['tabular-nums'],
@@ -1109,27 +1593,27 @@ const styles = StyleSheet.create({
   buttonContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   actionButton: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
-    marginTop: 6,
+    marginTop: 4,
     letterSpacing: 1,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 16,
+    paddingBottom: 8,
     paddingHorizontal: 16,
   },
   statItem: {
@@ -1137,20 +1621,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: '#FFFFFF',
     marginTop: 2,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#6B7280',
     marginTop: 1,
   },
   statDivider: {
     width: 1,
-    height: 36,
+    height: 32,
     backgroundColor: '#2D2D2D',
+  },
+  settingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  settingsText: {
+    fontSize: 13,
+    color: '#6B7280',
   },
   bottomNav: {
     flexDirection: 'row',
@@ -1171,21 +1667,21 @@ const styles = StyleSheet.create({
     marginTop: -1,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#FFFFFF',
-    marginTop: 16,
+    marginTop: 12,
   },
   sectionSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6B7280',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   questCard: {
     backgroundColor: '#1A1A1A',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 14,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#2D2D2D',
   },
@@ -1202,40 +1698,40 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   questName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   questDescription: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#9CA3AF',
     marginTop: 2,
   },
   questReward: {
     alignItems: 'center',
     backgroundColor: '#2D2D2D',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 8,
   },
   questXp: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '800',
     color: '#F59E0B',
   },
   questXpLabel: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#9CA3AF',
   },
   questProgressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    gap: 10,
+    marginTop: 10,
+    gap: 8,
   },
   questProgressBar: {
     flex: 1,
-    height: 6,
+    height: 5,
     backgroundColor: '#2D2D2D',
     borderRadius: 3,
     overflow: 'hidden',
@@ -1245,37 +1741,37 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   questProgressText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#9CA3AF',
     fontWeight: '600',
-    minWidth: 40,
+    minWidth: 36,
     textAlign: 'right',
   },
   questCompletedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
-    gap: 6,
+    marginTop: 8,
+    gap: 4,
   },
   questCompletedText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#10B981',
     fontWeight: '600',
   },
   trophySection: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#9CA3AF',
-    marginTop: 8,
-    marginBottom: 8,
+    marginTop: 6,
+    marginBottom: 6,
   },
   trophyCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1A1A1A',
     borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
+    padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
   },
   trophyUnlocked: {
@@ -1285,35 +1781,35 @@ const styles = StyleSheet.create({
     borderColor: '#2D2D2D',
   },
   trophyIcon: {
-    fontSize: 32,
-    marginRight: 12,
+    fontSize: 28,
+    marginRight: 10,
   },
   trophyInfo: {
     flex: 1,
   },
   trophyName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   trophyDescription: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#9CA3AF',
-    marginTop: 2,
+    marginTop: 1,
   },
   trophyReward: {
     marginLeft: 8,
   },
   trophyXp: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#F59E0B',
   },
   historyCard: {
     backgroundColor: '#1A1A1A',
     borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
+    padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#2D2D2D',
   },
@@ -1321,30 +1817,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   historyDate: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   historyDateText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#9CA3AF',
   },
   historyIntensity: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   historyIntensityText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#FFFFFF',
     fontWeight: '600',
   },
   historyStats: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
+    marginBottom: 8,
   },
   historyStat: {
     flexDirection: 'row',
@@ -1352,8 +1849,28 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   historyStatValue: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  historyFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  historyXp: {
+    fontSize: 13,
+    color: '#F59E0B',
+    fontWeight: '700',
+  },
+  levelUpBadgeSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  levelUpBadgeText: {
+    fontSize: 11,
+    color: '#10B981',
     fontWeight: '600',
   },
   leaderboardCard: {
@@ -1361,8 +1878,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#1A1A1A',
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
+    padding: 10,
+    marginBottom: 6,
     borderWidth: 1,
     borderColor: '#2D2D2D',
   },
@@ -1371,62 +1888,62 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1B4B',
   },
   leaderboardRank: {
-    width: 36,
+    width: 32,
     alignItems: 'center',
   },
   leaderboardMedal: {
-    fontSize: 24,
+    fontSize: 20,
   },
   leaderboardRankText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#9CA3AF',
     fontWeight: '700',
   },
   leaderboardBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    marginLeft: 6,
   },
-  leaderboardBadgeText: {
-    fontSize: 18,
+  leaderboardBadgeIcon: {
+    fontSize: 16,
   },
   leaderboardInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 10,
   },
   leaderboardName: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#FFFFFF',
     fontWeight: '700',
   },
   leaderboardStats: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#9CA3AF',
-    marginTop: 2,
+    marginTop: 1,
   },
-  leaderboardSessions: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '600',
+  leaderboardXp: {
+    fontSize: 13,
+    color: '#F59E0B',
+    fontWeight: '700',
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
+    paddingVertical: 40,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#6B7280',
     fontWeight: '600',
-    marginTop: 12,
+    marginTop: 10,
   },
   emptySubtext: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#4B5563',
-    marginTop: 4,
+    marginTop: 2,
   },
   modalOverlay: {
     flex: 1,
@@ -1437,42 +1954,153 @@ const styles = StyleSheet.create({
   intensityModal: {
     backgroundColor: '#1A1A1A',
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     width: SCREEN_WIDTH - 48,
     borderWidth: 1,
     borderColor: '#2D2D2D',
   },
   intensityModalTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
   },
   intensityModalSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#9CA3AF',
     textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 20,
+    marginTop: 2,
+    marginBottom: 16,
   },
   intensityOption: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: 14,
     borderRadius: 12,
     borderWidth: 2,
-    marginBottom: 12,
-    gap: 10,
+    marginBottom: 10,
+    gap: 8,
   },
   intensityOptionText: {
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  sessionDetailModal: {
+    flex: 1,
+    backgroundColor: '#0F0F0F',
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+  },
+  sessionDetailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2D2D2D',
+  },
+  sessionDetailTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  sessionDetailContent: {
+    padding: 16,
+  },
+  sessionDetailSection: {
+    marginBottom: 20,
+  },
+  sessionDetailDate: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginBottom: 8,
+  },
+  sessionDetailIntensity: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  sessionDetailIntensityText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  sessionDetailGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 20,
+  },
+  sessionDetailStat: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 14,
+    width: (SCREEN_WIDTH - 56) / 2,
+    alignItems: 'center',
+  },
+  sessionDetailStatValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginTop: 6,
+  },
+  sessionDetailStatLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  sessionDetailSectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    marginBottom: 8,
+  },
+  sessionDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 14,
+  },
+  sessionDetailRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  sessionDetailRowValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  sessionDetailCalories: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  sessionDetailXp: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#F59E0B',
+  },
+  sessionDetailLevelUp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 'auto',
+  },
+  sessionDetailLevelUpText: {
+    fontSize: 14,
+    color: '#10B981',
     fontWeight: '700',
   },
   levelUpModal: {
     backgroundColor: '#1A1A1A',
     borderRadius: 24,
-    padding: 32,
+    padding: 28,
     alignItems: 'center',
     width: SCREEN_WIDTH - 64,
     borderWidth: 1,
@@ -1481,124 +2109,191 @@ const styles = StyleSheet.create({
   levelUpContent: {
     alignItems: 'center',
   },
-  levelUpBadge: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  levelUpBadgeBig: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  levelUpBadgeIcon: {
-    fontSize: 48,
+  levelUpBadgeIconBig: {
+    fontSize: 44,
   },
   levelUpTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '900',
     color: '#FFFFFF',
-    marginTop: 12,
+    marginTop: 8,
     letterSpacing: 2,
   },
   levelUpRankName: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
-    marginTop: 6,
+    marginTop: 4,
   },
   levelUpLevel: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#9CA3AF',
-    marginTop: 10,
+    marginTop: 8,
     fontWeight: '600',
   },
   levelUpTap: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6B7280',
-    marginTop: 20,
+    marginTop: 16,
   },
   trophyUnlockModal: {
     backgroundColor: '#1A1A1A',
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     alignItems: 'center',
     width: SCREEN_WIDTH - 64,
     borderWidth: 2,
     borderColor: '#F59E0B',
   },
   trophyUnlockTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#F59E0B',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   trophyUnlockItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 10,
   },
   trophyUnlockIcon: {
-    fontSize: 40,
+    fontSize: 36,
   },
   trophyUnlockName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   trophyUnlockXp: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#F59E0B',
     fontWeight: '600',
   },
   usernameModal: {
     backgroundColor: '#1A1A1A',
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     width: SCREEN_WIDTH - 48,
     borderWidth: 1,
     borderColor: '#2D2D2D',
   },
   usernameModalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   usernameInput: {
     backgroundColor: '#2D2D2D',
     borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
+    padding: 12,
+    fontSize: 15,
     color: '#FFFFFF',
     textAlign: 'center',
   },
   usernameButtons: {
     flexDirection: 'row',
-    marginTop: 16,
-    gap: 12,
+    marginTop: 14,
+    gap: 10,
   },
   usernameCancel: {
     flex: 1,
-    padding: 14,
+    padding: 12,
     borderRadius: 12,
     backgroundColor: '#2D2D2D',
     alignItems: 'center',
   },
   usernameCancelText: {
     color: '#9CA3AF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
   },
   usernameSave: {
     flex: 1,
-    padding: 14,
+    padding: 12,
     borderRadius: 12,
     backgroundColor: '#6366F1',
     alignItems: 'center',
   },
   usernameSaveText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
+  },
+  settingsModal: {
+    flex: 1,
+    backgroundColor: '#0F0F0F',
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+  },
+  settingsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2D2D2D',
+  },
+  settingsTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  settingsContent: {
+    padding: 16,
+  },
+  settingItem: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+  },
+  settingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  settingLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  settingStatus: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  timePickerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+  },
+  timePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#2D2D2D',
+  },
+  timePillActive: {
+    backgroundColor: '#6366F1',
+  },
+  timePillText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    fontWeight: '600',
+  },
+  timePillTextActive: {
+    color: '#FFFFFF',
   },
 });
