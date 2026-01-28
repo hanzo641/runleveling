@@ -1347,60 +1347,130 @@ export default function Index() {
   );
 
   // Render Leaderboard Tab
-  const renderLeaderboardTab = () => (
-    <View style={styles.tabContent}>
-      <Text style={styles.sectionTitle}>Classement</Text>
-      <Text style={styles.sectionSubtitle}>Top 50 joueurs</Text>
-
-      <FlatList
-        data={leaderboard}
-        keyExtractor={(item) => `${item.rank}-${item.username}`}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item, index }) => (
-          <View
-            style={[
-              styles.leaderboardCard,
-              item.is_current_user && styles.leaderboardCardCurrentUser
-            ]}
+  // State for league filter
+  const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
+  
+  const renderLeaderboardTab = () => {
+    // Filter leaderboard by selected league
+    const filteredLeaderboard = selectedLeague 
+      ? leaderboard.filter(item => item.player_rank?.id === selectedLeague)
+      : leaderboard;
+    
+    return (
+      <View style={styles.tabContent}>
+        <Text style={styles.sectionTitle}>🏆 Classement</Text>
+        
+        {/* League Filter */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.leagueFilter}>
+          <TouchableOpacity
+            style={[styles.leagueChip, !selectedLeague && styles.leagueChipActive]}
+            onPress={() => setSelectedLeague(null)}
           >
-            <View style={styles.leaderboardRank}>
-              {item.rank <= 3 ? (
-                <Text style={styles.leaderboardMedal}>
-                  {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉'}
-                </Text>
-              ) : (
-                <Text style={styles.leaderboardRankText}>#{item.rank}</Text>
-              )}
-            </View>
-
-            <View style={[styles.leaderboardBadge, { backgroundColor: item.player_rank.color }]}>
-              <Text style={styles.leaderboardBadgeIcon}>{item.player_rank.icon}</Text>
-            </View>
-
-            <View style={styles.leaderboardInfo}>
+            <Text style={[styles.leagueChipText, !selectedLeague && styles.leagueChipTextActive]}>
+              🌍 Tous
+            </Text>
+          </TouchableOpacity>
+          {ALL_RANKS.map(rank => (
+            <TouchableOpacity
+              key={rank.id}
+              style={[
+                styles.leagueChip, 
+                selectedLeague === rank.id && styles.leagueChipActive,
+                { borderColor: rank.color }
+              ]}
+              onPress={() => setSelectedLeague(rank.id)}
+            >
               <Text style={[
-                styles.leaderboardName,
-                item.is_current_user && { color: '#6366F1' }
+                styles.leagueChipText, 
+                selectedLeague === rank.id && styles.leagueChipTextActive
               ]}>
-                {item.username} {item.is_current_user && '(Toi)'}
+                {rank.icon} {rank.name}
               </Text>
-              <Text style={styles.leaderboardStats}>
-                Niv. {item.level} • {item.total_distance_km} km
-              </Text>
-            </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-            <Text style={styles.leaderboardXp}>{item.total_xp}</Text>
+        {/* Current user's league info */}
+        {progress?.rank && (
+          <View style={[styles.currentLeagueCard, { borderColor: progress.rank.color }]}>
+            <View style={styles.currentLeagueHeader}>
+              <Text style={styles.currentLeagueTitle}>Ta Ligue</Text>
+              <View style={[styles.currentLeagueBadge, { backgroundColor: progress.rank.color }]}>
+                <Text style={styles.currentLeagueIcon}>{progress.rank.icon}</Text>
+                <Text style={styles.currentLeagueName}>{progress.rank.name}</Text>
+              </View>
+            </View>
+            {progress.next_rank && (
+              <View style={styles.nextLeagueInfo}>
+                <Text style={styles.nextLeagueText}>
+                  Prochaine ligue : {progress.next_rank.icon} {progress.next_rank.name} (Niv. {progress.next_rank.min_level})
+                </Text>
+                <View style={styles.progressToNextLeague}>
+                  <View 
+                    style={[
+                      styles.progressToNextLeagueFill, 
+                      { 
+                        width: `${Math.min(((progress.level - progress.rank.min_level) / (progress.next_rank.min_level - progress.rank.min_level)) * 100, 100)}%`,
+                        backgroundColor: progress.next_rank.color 
+                      }
+                    ]} 
+                  />
+                </View>
+              </View>
+            )}
           </View>
         )}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="trophy-outline" size={48} color="#4B5563" />
-            <Text style={styles.emptyText}>Classement vide</Text>
-          </View>
-        }
-      />
-    </View>
-  );
+
+        <FlatList
+          data={filteredLeaderboard}
+          keyExtractor={(item) => `${item.rank}-${item.username}`}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => (
+            <View
+              style={[
+                styles.leaderboardCard,
+                item.is_current_user && styles.leaderboardCardCurrentUser
+              ]}
+            >
+              <View style={styles.leaderboardRank}>
+                {item.rank <= 3 ? (
+                  <Text style={styles.leaderboardMedal}>
+                    {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉'}
+                  </Text>
+                ) : (
+                  <Text style={styles.leaderboardRankText}>#{item.rank}</Text>
+                )}
+              </View>
+
+              <View style={[styles.leaderboardBadge, { backgroundColor: item.player_rank?.color || '#6B7280' }]}>
+                <Text style={styles.leaderboardBadgeIcon}>{item.player_rank?.icon || '🏃'}</Text>
+              </View>
+
+              <View style={styles.leaderboardInfo}>
+                <Text style={[
+                  styles.leaderboardName,
+                  item.is_current_user && { color: '#6366F1' }
+                ]}>
+                  {item.username} {item.is_current_user && '(Toi)'}
+                </Text>
+                <Text style={styles.leaderboardStats}>
+                  Niv. {item.level} • {item.total_distance_km || 0} km
+                </Text>
+              </View>
+
+              <Text style={styles.leaderboardXp}>{item.total_xp}</Text>
+            </View>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Ionicons name="trophy-outline" size={48} color="#4B5563" />
+              <Text style={styles.emptyText}>Aucun joueur dans cette ligue</Text>
+            </View>
+          }
+        />
+      </View>
+    );
+  };
 
   return (
     <LinearGradient 
