@@ -473,9 +473,19 @@ export default function Index() {
 
   const fetchTrophies = useCallback(async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/trophies/${deviceId.current}`);
+      console.log('Fetching trophies for device:', deviceId.current);
+      const url = `${BACKEND_URL}/api/trophies/${deviceId.current}`;
+      console.log('Trophies URL:', url);
+      const response = await fetch(url);
+      console.log('Trophies response status:', response.status);
       const data = await response.json();
-      setAllTrophies(data);
+      console.log('Trophies data:', data.unlocked?.length, 'unlocked,', data.locked?.length, 'locked');
+      if (data && (data.unlocked || data.locked)) {
+        setAllTrophies({
+          unlocked: data.unlocked || [],
+          locked: data.locked || []
+        });
+      }
     } catch (error) {
       console.error('Error fetching trophies:', error);
     }
