@@ -288,6 +288,7 @@ async def get_progress(device_id: str):
         "notification_time": user.get("notification_time", {"hour": 9, "minute": 0}),
         "trophies_earned": user.get("trophies_earned", []),
         "daily_quests": user.get("daily_quests", []),
+        "username_set": user.get("username_set", False),
     }
 
 @app.post("/api/session/complete")
