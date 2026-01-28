@@ -2081,9 +2081,12 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
+  gradientContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
