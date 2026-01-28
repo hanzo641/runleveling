@@ -545,11 +545,33 @@ export default function Index() {
   // Start GPS tracking
   const startLocationTracking = async () => {
     if (!locationPermission) {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      // Request foreground permission first
+      const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
+      if (foregroundStatus !== 'granted') {
         Alert.alert('Permission refusée', 'Le GPS est nécessaire pour tracker ta course.');
         return;
       }
+      
+      // Request background permission for tracking when screen is locked
+      if (Platform.OS !== 'web') {
+        const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
+        if (backgroundStatus === 'granted') {
+          // Start background location updates
+          await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
+            accuracy: Location.Accuracy.BestForNavigation,
+            timeInterval: 5000,
+            distanceInterval: 10,
+            foregroundService: {
+              notificationTitle: 'RunLeveling - Course en cours',
+              notificationBody: 'Tracking GPS actif',
+              notificationColor: '#3B82F6',
+            },
+            pausesUpdatesAutomatically: false,
+            showsBackgroundLocationIndicator: true,
+          });
+        }
+      }
+      
       setLocationPermission(true);
     }
 
