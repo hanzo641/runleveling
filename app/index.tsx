@@ -2767,12 +2767,15 @@ const styles = StyleSheet.create({
   },
   questHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: 10,
+  },
+  questIcon: {
+    fontSize: 24,
+    marginTop: 2,
   },
   questInfo: {
     flex: 1,
-    marginRight: 12,
   },
   questName: {
     fontSize: 15,
