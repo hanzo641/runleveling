@@ -2756,8 +2756,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2D2D2D',
   },
+  questCardReady: {
+    borderColor: '#F59E0B',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+  },
   questCardCompleted: {
     borderColor: '#10B981',
+    backgroundColor: 'rgba(16, 185, 129, 0.05)',
   },
   questHeader: {
     flexDirection: 'row',
