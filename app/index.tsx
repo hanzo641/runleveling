@@ -1339,6 +1339,7 @@ export default function Index() {
           ]}
         >
           <View style={styles.questHeader}>
+            <Text style={styles.questIcon}>{quest.icon || '🎯'}</Text>
             <View style={styles.questInfo}>
               <Text style={styles.questName}>{quest.name}</Text>
               <Text style={styles.questDescription}>{quest.description}</Text>
