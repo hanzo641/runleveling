@@ -217,10 +217,10 @@ const styles = StyleSheet.create({
   },
   logoGlow: {
     position: 'absolute',
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: '#3B82F6',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(59, 130, 246, 0.3)',
   },
   logoCircle: {
     width: 80,
