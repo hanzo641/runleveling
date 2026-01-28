@@ -1396,15 +1396,19 @@ export default function Index() {
             <View style={styles.currentLeagueHeader}>
               <Text style={styles.currentLeagueTitle}>Ta Ligue</Text>
               <View style={[styles.currentLeagueBadge, { backgroundColor: `${progress.rank.color}33` }]}>
-                <Text style={styles.currentLeagueIcon}>{progress.rank.icon}</Text>
-                <Text style={styles.currentLeagueName}>{progress.rank.name}</Text>
+                <RankBadge rankId={progress.rank.id} size={28} />
+                <Text style={[styles.currentLeagueName, { color: progress.rank.color }]}>{progress.rank.name}</Text>
               </View>
             </View>
             {progress.next_rank && (
               <View style={styles.nextLeagueInfo}>
-                <Text style={styles.nextLeagueText}>
-                  Prochaine ligue : {progress.next_rank.icon} {progress.next_rank.name} (Niv. {progress.next_rank.min_level})
-                </Text>
+                <View style={styles.nextLeagueRow}>
+                  <Text style={styles.nextLeagueText}>Prochaine ligue :</Text>
+                  <RankBadge rankId={progress.next_rank.id} size={20} />
+                  <Text style={[styles.nextLeagueText, { color: progress.next_rank.color, fontWeight: '700' }]}>
+                    {progress.next_rank.name} (Niv. {progress.next_rank.min_level})
+                  </Text>
+                </View>
                 <View style={styles.progressToNextLeague}>
                   <View 
                     style={[
@@ -1442,9 +1446,7 @@ export default function Index() {
                 )}
               </View>
 
-              <View style={[styles.leaderboardBadge, { backgroundColor: item.rank?.color || '#6B7280' }]}>
-                <Text style={styles.leaderboardBadgeIcon}>{item.rank?.icon || '🏃'}</Text>
-              </View>
+              <RankBadge rankId={item.rank?.id || 'debutant'} size={36} />
 
               <View style={styles.leaderboardInfo}>
                 <Text style={[
