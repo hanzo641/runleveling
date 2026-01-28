@@ -238,11 +238,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6',
     top: SCREEN_HEIGHT * 0.15,
     left: -80,
+    opacity: 0.15,
   },
   glowGold: {
     backgroundColor: '#F59E0B',
     bottom: SCREEN_HEIGHT * 0.15,
     right: -80,
+    opacity: 0.12,
   },
   centerContent: {
     alignItems: 'center',
