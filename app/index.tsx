@@ -62,6 +62,22 @@ const ALL_RANKS = [
   { id: 'maitre', name: 'Maître', min_level: 91, color: '#EF4444', icon: '👑' },
 ];
 
+// Motivational messages for level up
+const LEVEL_UP_MESSAGES = [
+  "Tu progresses à une vitesse folle ! 🔥",
+  "Chaque niveau te rapproche de tes objectifs ! 💪",
+  "Continue comme ça, tu es sur la bonne voie ! 🚀",
+  "Bravo ! Tu deviens de plus en plus fort ! ⚡",
+  "Ta détermination paie ! Continue ! 🌟",
+  "Un pas de plus vers la légende ! 🏆",
+  "Impressionnant ! Tu ne t'arrêtes jamais ! 💯",
+  "Les champions ne lâchent rien ! 🎯",
+  "Tu repousses tes limites ! Respect ! 👏",
+  "La persévérance mène au succès ! ✨",
+  "Tu es en feu ! Rien ne t'arrête ! 🔥",
+  "Chaque course te rend plus fort ! 💪",
+];
+
 // Configure notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
