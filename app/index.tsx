@@ -2839,6 +2839,22 @@ const styles = StyleSheet.create({
     color: '#10B981',
     fontWeight: '600',
   },
+  questClaimButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F59E0B',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 10,
+    gap: 6,
+  },
+  questClaimText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
   trophySection: {
     fontSize: 13,
     fontWeight: '700',
