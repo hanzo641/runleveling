@@ -1377,12 +1377,15 @@ export default function Index() {
               ]}
               onPress={() => setSelectedLeague(rank.id)}
             >
-              <Text style={[
-                styles.leagueChipText, 
-                selectedLeague === rank.id && styles.leagueChipTextActive
-              ]}>
-                {rank.icon} {rank.name}
-              </Text>
+              <View style={styles.leagueChipContent}>
+                <RankBadge rankId={rank.id} size={24} />
+                <Text style={[
+                  styles.leagueChipText, 
+                  selectedLeague === rank.id && styles.leagueChipTextActive
+                ]}>
+                  {rank.name}
+                </Text>
+              </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -1392,7 +1395,7 @@ export default function Index() {
           <View style={[styles.currentLeagueCard, { borderColor: progress.rank.color }]}>
             <View style={styles.currentLeagueHeader}>
               <Text style={styles.currentLeagueTitle}>Ta Ligue</Text>
-              <View style={[styles.currentLeagueBadge, { backgroundColor: progress.rank.color }]}>
+              <View style={[styles.currentLeagueBadge, { backgroundColor: `${progress.rank.color}33` }]}>
                 <Text style={styles.currentLeagueIcon}>{progress.rank.icon}</Text>
                 <Text style={styles.currentLeagueName}>{progress.rank.name}</Text>
               </View>
