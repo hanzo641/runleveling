@@ -2784,16 +2784,21 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   questReward: {
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#2D2D2D',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 8,
+    gap: 4,
+  },
+  questRewardReady: {
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
   },
   questXp: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#F59E0B',
+    color: '#9CA3AF',
   },
   questXpLabel: {
     fontSize: 9,
