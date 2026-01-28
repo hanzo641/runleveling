@@ -185,7 +185,8 @@ def generate_daily_quests(user_level: int) -> List[dict]:
             "progress": 0,
             "completed": False,
             "claimed": False,
-            "date": today
+            "date": today,
+            "icon": template.get("icon", "🎯")
         }
         quests.append(quest)
     
