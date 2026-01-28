@@ -1286,7 +1286,7 @@ export default function Index() {
   // Render Quests Tab
   const renderQuestsTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.sectionTitle}>Quêtes du Jour</Text>
+      <Text style={styles.sectionTitle}>🎯 Quêtes du Jour</Text>
       <Text style={styles.sectionSubtitle}>Se réinitialisent à minuit</Text>
 
       {progress?.daily_quests?.map((quest, index) => (
@@ -1294,7 +1294,8 @@ export default function Index() {
           key={quest.id}
           style={[
             styles.questCard,
-            quest.completed && styles.questCardCompleted
+            quest.completed && !quest.claimed && styles.questCardReady,
+            quest.claimed && styles.questCardCompleted
           ]}
         >
           <View style={styles.questHeader}>
@@ -1302,9 +1303,9 @@ export default function Index() {
               <Text style={styles.questName}>{quest.name}</Text>
               <Text style={styles.questDescription}>{quest.description}</Text>
             </View>
-            <View style={styles.questReward}>
-              <Text style={styles.questXp}>+{quest.xp_reward}</Text>
-              <Text style={styles.questXpLabel}>XP</Text>
+            <View style={[styles.questReward, quest.completed && !quest.claimed && styles.questRewardReady]}>
+              <Ionicons name="star" size={14} color={quest.completed && !quest.claimed ? '#F59E0B' : '#6B7280'} />
+              <Text style={[styles.questXp, quest.completed && !quest.claimed && { color: '#F59E0B' }]}>+{quest.xp_reward}</Text>
             </View>
           </View>
 
@@ -1315,7 +1316,7 @@ export default function Index() {
                   styles.questProgressFill,
                   {
                     width: `${Math.min(100, (quest.progress / quest.target) * 100)}%`,
-                    backgroundColor: quest.completed ? '#10B981' : '#6366F1'
+                    backgroundColor: quest.claimed ? '#10B981' : quest.completed ? '#F59E0B' : '#6366F1'
                   }
                 ]}
               />
@@ -1325,14 +1326,32 @@ export default function Index() {
             </Text>
           </View>
 
-          {quest.completed && (
+          {quest.completed && !quest.claimed && (
+            <TouchableOpacity 
+              style={styles.questClaimButton}
+              onPress={() => claimQuestReward(quest.id)}
+            >
+              <Ionicons name="gift" size={18} color="#FFFFFF" />
+              <Text style={styles.questClaimText}>Réclamer</Text>
+            </TouchableOpacity>
+          )}
+
+          {quest.claimed && (
             <View style={styles.questCompletedBadge}>
               <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-              <Text style={styles.questCompletedText}>Complétée!</Text>
+              <Text style={styles.questCompletedText}>Réclamée!</Text>
             </View>
           )}
         </View>
       ))}
+
+      {(!progress?.daily_quests || progress.daily_quests.length === 0) && (
+        <View style={styles.emptyState}>
+          <Ionicons name="flash-outline" size={48} color="#4B5563" />
+          <Text style={styles.emptyText}>Aucune quête disponible</Text>
+          <Text style={styles.emptySubtext}>Reviens demain !</Text>
+        </View>
+      )}
     </ScrollView>
   );
 
