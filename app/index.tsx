@@ -3793,10 +3793,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
+  nextLeagueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
   nextLeagueText: {
     fontSize: 12,
     color: '#9CA3AF',
-    marginBottom: 8,
   },
   progressToNextLeague: {
     height: 6,
