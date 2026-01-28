@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Rank images
 const RANK_IMAGES = [
@@ -14,17 +14,13 @@ const RANK_IMAGES = [
   { id: 'maitre', source: require('../assets/images/ranks/rank_6_maitre.png') },
 ];
 
-interface LoadingScreenProps {
-  onLoadingComplete?: () => void;
-}
-
-export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
-  // Animation values
+export default function LoadingScreen() {
   const logoScale = useRef(new Animated.Value(0.95)).current;
   const orbitRotation = useRef(new Animated.Value(0)).current;
+  const glowOpacity = useRef(new Animated.Value(0.2)).current;
 
   useEffect(() => {
-    // Logo pulse animation
+    // Logo pulse
     Animated.loop(
       Animated.sequence([
         Animated.timing(logoScale, {
@@ -42,14 +38,30 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
       ])
     ).start();
 
-    // Animation de rotation continue des badges
+    // Rotation des badges
     Animated.loop(
       Animated.timing(orbitRotation, {
         toValue: 1,
-        duration: 15000,
+        duration: 12000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
+    ).start();
+
+    // Glow pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowOpacity, {
+          toValue: 0.4,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowOpacity, {
+          toValue: 0.2,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
     ).start();
   }, []);
 
@@ -63,31 +75,24 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
     outputRange: ['0deg', '-360deg'],
   });
 
-  const ORBIT_RADIUS = 110;
-  const BADGE_SIZE = 40;
+  const ORBIT_RADIUS = 105;
+  const BADGE_SIZE = 38;
 
   return (
     <LinearGradient
-      colors={['#0a0a1a', '#151530', '#0d0d20', '#050510']}
-      locations={[0, 0.35, 0.7, 1]}
+      colors={['#0a0a1a', '#12122a', '#0a0a1a']}
       style={styles.container}
     >
-      {/* Subtle ambient glow - removed for now to fix display issues */}
-      {/* <View style={[styles.ambientGlow, styles.glowBlue]} />
-      <View style={[styles.ambientGlow, styles.glowGold]} /> */}
-
-      {/* Main content - foreground layer */}
-      <View style={styles.mainContent}>
+      {/* Center container for orbit */}
+      <View style={styles.centerContainer}>
         {/* Orbit ring */}
-        <View style={[styles.orbitRing, { width: ORBIT_RADIUS * 2 + BADGE_SIZE + 20, height: ORBIT_RADIUS * 2 + BADGE_SIZE + 20 }]} />
+        <View style={[styles.orbitRing, { 
+          width: ORBIT_RADIUS * 2 + BADGE_SIZE + 20, 
+          height: ORBIT_RADIUS * 2 + BADGE_SIZE + 20 
+        }]} />
 
         {/* Orbiting badges */}
-        <Animated.View
-          style={[
-            styles.orbitContainer,
-            { transform: [{ rotate: spin }] },
-          ]}
-        >
+        <Animated.View style={[styles.orbitWrapper, { transform: [{ rotate: spin }] }]}>
           {RANK_IMAGES.map((rank, index) => {
             const angle = (index * 60 - 90) * (Math.PI / 180);
             const x = Math.cos(angle) * ORBIT_RADIUS;
@@ -97,7 +102,7 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
               <Animated.View
                 key={rank.id}
                 style={[
-                  styles.orbitBadge,
+                  styles.badge,
                   {
                     transform: [
                       { translateX: x },
@@ -107,98 +112,67 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
                   },
                 ]}
               >
-                <Image
-                  source={rank.source}
-                  style={styles.badgeImage}
-                  resizeMode="contain"
-                />
+                <Image source={rank.source} style={styles.badgeImage} resizeMode="contain" />
               </Animated.View>
             );
           })}
         </Animated.View>
 
-        {/* Central Logo */}
-        <Animated.View
-          style={[
-            styles.logoContainer,
-            { transform: [{ scale: logoScale }] },
-          ]}
-        >
-          {/* Glow behind logo */}
-          <View style={styles.logoGlow} />
-          
-          {/* Logo circle */}
+        {/* Central logo */}
+        <Animated.View style={[styles.logoWrapper, { transform: [{ scale: logoScale }] }]}>
+          <Animated.View style={[styles.logoGlow, { opacity: glowOpacity }]} />
           <View style={styles.logoCircle}>
-            <Text style={styles.logoIcon}>🏃</Text>
+            <Text style={styles.logoEmoji}>🏃</Text>
           </View>
         </Animated.View>
+      </View>
 
-        {/* Title */}
-        <View style={styles.titleContainer}>
-          <Text style={styles.titleRun}>RUN</Text>
-          <Text style={styles.titleLeveling}>LEVELING</Text>
-        </View>
+      {/* Title */}
+      <View style={styles.titleRow}>
+        <Text style={styles.titleBlue}>RUN</Text>
+        <Text style={styles.titleGold}>LEVELING</Text>
+      </View>
 
-        {/* Tagline */}
-        <Text style={styles.tagline}>Cours. Monte en niveau. Deviens légende.</Text>
+      {/* Tagline */}
+      <Text style={styles.tagline}>Cours. Monte en niveau. Deviens légende.</Text>
 
-        {/* Loading dots */}
-        <View style={styles.loadingDots}>
-          <LoadingDots />
-        </View>
+      {/* Loading indicator */}
+      <View style={styles.dotsRow}>
+        <LoadingDots />
       </View>
     </LinearGradient>
   );
 }
 
-// Composant pour les points de chargement animés
 function LoadingDots() {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+  const dots = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
 
   useEffect(() => {
-    const animateDot = (dot: Animated.Value, delay: number) => {
+    dots.forEach((dot, i) => {
       Animated.loop(
         Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 400,
-            useNativeDriver: true,
-          }),
+          Animated.delay(i * 200),
+          Animated.timing(dot, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(dot, { toValue: 0, duration: 400, useNativeDriver: true }),
         ])
       ).start();
-    };
-
-    animateDot(dot1, 0);
-    animateDot(dot2, 200);
-    animateDot(dot3, 400);
+    });
   }, []);
-
-  const dotStyle = (anim: Animated.Value) => ({
-    opacity: anim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.3, 1],
-    }),
-    transform: [{
-      scale: anim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 1.3],
-      }),
-    }],
-  });
 
   return (
     <View style={styles.dotsContainer}>
-      <Animated.View style={[styles.dot, dotStyle(dot1)]} />
-      <Animated.View style={[styles.dot, dotStyle(dot2)]} />
-      <Animated.View style={[styles.dot, dotStyle(dot3)]} />
+      {dots.map((dot, i) => (
+        <Animated.View
+          key={i}
+          style={[
+            styles.dot,
+            {
+              opacity: dot.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }),
+              transform: [{ scale: dot.interpolate({ inputRange: [0, 1], outputRange: [1, 1.3] }) }],
+            },
+          ]}
+        />
+      ))}
     </View>
   );
 }
@@ -206,91 +180,73 @@ function LoadingDots() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  ambientGlow: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    opacity: 0.08,
-  },
-  glowBlue: {
-    backgroundColor: '#3B82F6',
-    top: 100,
-    left: 20,
-  },
-  glowGold: {
-    backgroundColor: '#F59E0B',
-    bottom: 150,
-    right: 20,
-  },
-  mainContent: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  orbitContainer: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
+  centerContainer: {
     width: 280,
     height: 280,
-  },
-  orbitBadge: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-  },
-  badgeImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   orbitRing: {
     position: 'absolute',
     borderRadius: 200,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.25)',
+    borderColor: 'rgba(59, 130, 246, 0.2)',
     borderStyle: 'dashed',
   },
-  logoContainer: {
+  orbitWrapper: {
+    position: 'absolute',
+    width: 280,
+    height: 280,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+  },
+  badgeImage: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+  },
+  logoWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoGlow: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     backgroundColor: '#3B82F6',
-    opacity: 0.25,
   },
   logoCircle: {
-    width: 85,
-    height: 85,
-    borderRadius: 42.5,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#1a1a3a',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
     borderColor: '#3B82F6',
   },
-  logoIcon: {
-    fontSize: 38,
+  logoEmoji: {
+    fontSize: 36,
   },
-  titleContainer: {
+  titleRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
     marginTop: 25,
   },
-  titleRun: {
-    fontSize: 32,
+  titleBlue: {
+    fontSize: 30,
     fontWeight: '900',
     color: '#3B82F6',
-    letterSpacing: 4,
+    letterSpacing: 3,
   },
-  titleLeveling: {
-    fontSize: 32,
+  titleGold: {
+    fontSize: 30,
     fontWeight: '900',
     color: '#F59E0B',
     letterSpacing: 2,
@@ -299,10 +255,9 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 13,
     marginTop: 10,
-    letterSpacing: 0.5,
   },
-  loadingDots: {
-    marginTop: 35,
+  dotsRow: {
+    marginTop: 30,
   },
   dotsContainer: {
     flexDirection: 'row',
