@@ -155,13 +155,11 @@ interface SessionDetail {
 }
 
 interface LeaderboardEntry {
-  rank: number;
+  position: number;
   username: string;
   level: number;
   total_xp: number;
-  player_rank: Rank;
-  sessions_completed: number;
-  total_distance_km: number;
+  rank: Rank;
   is_current_user: boolean;
 }
 
