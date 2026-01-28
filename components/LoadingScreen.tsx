@@ -72,9 +72,9 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
       locations={[0, 0.35, 0.7, 1]}
       style={styles.container}
     >
-      {/* Subtle ambient glow - background layer */}
-      <View style={[styles.ambientGlow, styles.glowBlue]} />
-      <View style={[styles.ambientGlow, styles.glowGold]} />
+      {/* Subtle ambient glow - removed for now to fix display issues */}
+      {/* <View style={[styles.ambientGlow, styles.glowBlue]} />
+      <View style={[styles.ambientGlow, styles.glowGold]} /> */}
 
       {/* Main content - foreground layer */}
       <View style={styles.mainContent}>
