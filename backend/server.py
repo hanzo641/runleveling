@@ -375,9 +375,38 @@ async def complete_session(data: dict):
     # Check for new trophies
     temp_user = {**user, **update_data}
     new_trophies = check_trophies(temp_user)
+    trophy_xp = 0
     if new_trophies:
         earned_trophies = user.get("trophies_earned", []) + new_trophies
         update_data["trophies_earned"] = earned_trophies
+        
+        # Add trophy XP rewards
+        for trophy in new_trophies:
+            trophy_xp += trophy.get("xp_reward", 0)
+        
+        if trophy_xp > 0:
+            # Update XP with trophy rewards
+            new_total_xp += trophy_xp
+            new_current_xp += trophy_xp
+            update_data["total_xp"] = new_total_xp
+            update_data["current_xp"] = new_current_xp
+            
+            # Check for additional level ups from trophy XP
+            while new_current_xp >= xp_for_next:
+                new_current_xp -= xp_for_next
+                new_level += 1
+                xp_for_next = calculate_xp_for_level(new_level)
+                level_ups.append(new_level)
+            
+            update_data["level"] = new_level
+            update_data["current_xp"] = new_current_xp
+            
+            # Check if rank changed due to trophy XP level ups
+            new_rank = get_rank_for_level(new_level)
+            if new_rank["id"] != update_data.get("rank", {}).get("id"):
+                rank_changed = True
+                old_rank = update_data.get("rank")
+            update_data["rank"] = new_rank
     
     users_collection.update_one({"device_id": device_id}, {"$set": update_data})
     
