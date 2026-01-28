@@ -247,6 +247,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [sessions, setSessions] = useState<SessionDetail[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
   const [allTrophies, setAllTrophies] = useState<{ unlocked: Trophy[]; locked: Trophy[] }>({ unlocked: [], locked: [] });
   const [showIntensityInfo, setShowIntensityInfo] = useState(false);
   const [showTrophyUnlock, setShowTrophyUnlock] = useState(false);
