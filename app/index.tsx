@@ -1165,6 +1165,11 @@ export default function Index() {
             rankId={progress?.rank?.id || 'debutant'} 
             size={90} 
             showGlow={true}
+            progressToNextRank={progress?.next_rank ? 
+              ((progress.level - progress.rank.min_level) / (progress.next_rank.min_level - progress.rank.min_level)) * 100 
+              : 100
+            }
+            nextRankColor={progress?.next_rank?.color}
           />
           <View style={styles.avatarHint}>
             <Ionicons name="chevron-up" size={14} color="#9CA3AF" />
@@ -1173,12 +1178,29 @@ export default function Index() {
         <Text style={[styles.rankName, { color: rankColor }]}>
           {progress?.rank?.name || 'Débutant'}
         </Text>
-        <TouchableOpacity onPress={() => setShowUsernameModal(true)}>
-          <Text style={styles.username}>{progress?.username || 'Runner'}</Text>
+        
+        {/* Username with clear CTA */}
+        <TouchableOpacity 
+          style={styles.usernameContainer}
+          onPress={() => !progress?.username_set && setShowUsernameModal(true)}
+          disabled={progress?.username_set}
+        >
+          {!progress?.username_set ? (
+            <>
+              <View style={styles.usernameCTA}>
+                <Ionicons name="pencil" size={14} color="#6366F1" />
+                <Text style={styles.usernameEditable}>{progress?.username || 'Choisis ton pseudo'}</Text>
+              </View>
+              <Text style={styles.usernameHint}>Clique pour définir (choix définitif)</Text>
+            </>
+          ) : (
+            <Text style={styles.username}>{progress?.username}</Text>
+          )}
         </TouchableOpacity>
+        
         {progress?.next_rank && (
           <Text style={styles.nextRank}>
-            Prochain: {progress.next_rank.name} (Niv. {progress.next_rank.min_level})
+            Prochain rang: {progress.next_rank.name} (Niv. {progress.next_rank.min_level})
           </Text>
         )}
       </View>
