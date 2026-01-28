@@ -1163,8 +1163,31 @@ export default function Index() {
 
       {/* XP Gain Animation */}
       {showXpGain && (
-        <Animated.View style={[styles.xpGainContainer, { transform: [{ translateY: xpGainTranslateYAnim }], opacity: xpGainOpacityAnim }]}>
-          <Text style={[styles.xpGainText, { color: rankColor }]}>+{xpGained} XP</Text>
+        <Animated.View 
+          style={[
+            styles.xpGainContainer, 
+            { 
+              transform: [
+                { translateY: xpGainTranslateYAnim },
+                { scale: xpGainScaleAnim }
+              ], 
+              opacity: xpGainOpacityAnim 
+            }
+          ]}
+        >
+          <Animated.View 
+            style={[
+              styles.xpGainGlow,
+              { 
+                backgroundColor: rankColor,
+                opacity: xpBadgeGlowAnim,
+              }
+            ]} 
+          />
+          <View style={[styles.xpGainBadge, { borderColor: rankColor }]}>
+            <Ionicons name="star" size={18} color={rankColor} />
+            <Text style={[styles.xpGainText, { color: rankColor }]}>+{xpGained} XP</Text>
+          </View>
         </Animated.View>
       )}
 
