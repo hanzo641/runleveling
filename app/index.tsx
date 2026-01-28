@@ -973,7 +973,7 @@ export default function Index() {
       });
       setShowUsernameModal(false);
       fetchProgress();
-      fetchLeaderboard();
+      fetchLeaderboard(selectedLeague);
     } catch (error) {
       console.error('Error updating username:', error);
     }
