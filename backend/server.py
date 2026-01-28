@@ -589,7 +589,15 @@ async def update_username(data: dict):
     device_id = data.get("device_id")
     username = data.get("username", "Runner")
     
-    users_collection.update_one({"device_id": device_id}, {"$set": {"username": username}})
+    # Check if username is already set
+    user = users_collection.find_one({"device_id": device_id})
+    if user and user.get("username_set"):
+        return {"success": False, "error": "Le pseudo a déjà été défini et ne peut plus être changé."}
+    
+    users_collection.update_one(
+        {"device_id": device_id}, 
+        {"$set": {"username": username, "username_set": True}}
+    )
     return {"success": True}
 
 @app.post("/api/notifications")
