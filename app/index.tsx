@@ -17,14 +17,19 @@ import {
   Switch,
   Linking,
   Animated,
+  Image,
+  AppState,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
+import * as TaskManager from 'expo-task-manager';
 import RankAvatar from '../components/RankAvatar';
+import LoadingScreen from '../components/LoadingScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
