@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing, Image, ImageSourcePropType } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 
 // Import rank images
 const RANK_IMAGES: { [key: string]: ImageSourcePropType } = {
@@ -15,9 +16,17 @@ interface RankAvatarProps {
   rankId: string;
   size?: number;
   showGlow?: boolean;
+  progressToNextRank?: number; // 0-100 percentage
+  nextRankColor?: string;
 }
 
-export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankAvatarProps) {
+export default function RankAvatar({ 
+  rankId, 
+  size = 80, 
+  showGlow = true,
+  progressToNextRank,
+  nextRankColor 
+}: RankAvatarProps) {
   const pulseScale = useRef(new Animated.Value(1)).current;
   const glowOpacity = useRef(new Animated.Value(0.6)).current;
 
@@ -78,24 +87,63 @@ export default function RankAvatar({ rankId, size = 80, showGlow = true }: RankA
   };
 
   const imageSource = RANK_IMAGES[rankId] || RANK_IMAGES.debutant;
+  
+  // Progress circle calculations
+  const showProgress = progressToNextRank !== undefined && progressToNextRank >= 0;
+  const strokeWidth = 4;
+  const radius = (size / 2) + 6;
+  const circumference = 2 * Math.PI * radius;
+  const progressOffset = circumference - (circumference * (progressToNextRank || 0)) / 100;
+  const progressColor = nextRankColor || getGlowColor();
 
   return (
-    <View style={[styles.container, { width: size * 1.3, height: size * 1.3 }]}>
+    <View style={[styles.container, { width: size * 1.4, height: size * 1.4 }]}>
       {showGlow && (
         <Animated.View 
           style={[
             styles.glow, 
             { 
               backgroundColor: getGlowColor(),
-              width: size * 1.2,
-              height: size * 1.2,
-              borderRadius: size * 0.6,
+              width: size * 1.1,
+              height: size * 1.1,
+              borderRadius: size * 0.55,
               transform: [{ scale: pulseScale }],
               opacity: glowOpacity,
             },
           ]} 
         />
       )}
+      
+      {/* Progress Ring */}
+      {showProgress && (
+        <View style={styles.progressRingContainer}>
+          <Svg width={size + 20} height={size + 20} style={styles.progressSvg}>
+            {/* Background circle */}
+            <Circle
+              cx={(size + 20) / 2}
+              cy={(size + 20) / 2}
+              r={radius}
+              stroke="rgba(255,255,255,0.15)"
+              strokeWidth={strokeWidth}
+              fill="transparent"
+            />
+            {/* Progress circle */}
+            <Circle
+              cx={(size + 20) / 2}
+              cy={(size + 20) / 2}
+              r={radius}
+              stroke={progressColor}
+              strokeWidth={strokeWidth}
+              fill="transparent"
+              strokeDasharray={circumference}
+              strokeDashoffset={progressOffset}
+              strokeLinecap="round"
+              transform={`rotate(-90, ${(size + 20) / 2}, ${(size + 20) / 2})`}
+            />
+          </Svg>
+        </View>
+      )}
+      
       <Image
         source={imageSource}
         style={[
@@ -119,6 +167,14 @@ const styles = StyleSheet.create({
   },
   glow: {
     position: 'absolute',
+  },
+  progressRingContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressSvg: {
+    transform: [{ rotate: '0deg' }],
   },
   image: {
     zIndex: 1,
