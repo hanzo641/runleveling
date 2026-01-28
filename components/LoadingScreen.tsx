@@ -21,10 +21,10 @@ interface LoadingScreenProps {
 export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   // Animation values
   const logoScale = useRef(new Animated.Value(0.8)).current;
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const logoOpacity = useRef(new Animated.Value(1)).current;
+  const titleOpacity = useRef(new Animated.Value(1)).current;
   const orbitRotation = useRef(new Animated.Value(0)).current;
-  const badgesOpacity = useRef(new Animated.Value(0)).current;
+  const badgesOpacity = useRef(new Animated.Value(1)).current;
   const glowPulse = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
