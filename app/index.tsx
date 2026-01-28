@@ -543,9 +543,9 @@ export default function Index() {
 
   useEffect(() => {
     if (activeTab === 'history') fetchSessions();
-    if (activeTab === 'leaderboard') fetchLeaderboard();
+    if (activeTab === 'leaderboard') fetchLeaderboard(selectedLeague);
     if (activeTab === 'trophies') fetchTrophies();
-  }, [activeTab]);
+  }, [activeTab, selectedLeague]);
 
   // Start GPS tracking
   const startLocationTracking = async () => {
