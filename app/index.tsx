@@ -2808,9 +2808,15 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     marginTop: 1,
   },
+  leaderboardXpBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   leaderboardXp: {
     fontSize: 13,
-    color: '#F59E0B',
     fontWeight: '700',
   },
   emptyState: {
