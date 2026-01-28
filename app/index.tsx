@@ -2076,6 +2076,7 @@ export default function Index() {
         </View>
       </Modal>
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 
