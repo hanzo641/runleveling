@@ -292,13 +292,95 @@ export default function Index() {
   const levelUpOpacityAnim = useRef(new Animated.Value(0)).current;
   const xpGainTranslateYAnim = useRef(new Animated.Value(0)).current;
   const xpGainOpacityAnim = useRef(new Animated.Value(0)).current;
+  const xpGainScaleAnim = useRef(new Animated.Value(0.5)).current;
   const pulseScaleAnim = useRef(new Animated.Value(1)).current;
   const runCompleteXpAnim = useRef(new Animated.Value(0)).current;
   const sparkleOpacity1 = useRef(new Animated.Value(0)).current;
   const sparkleOpacity2 = useRef(new Animated.Value(0)).current;
   const sparkleOpacity3 = useRef(new Animated.Value(0)).current;
   const trophyScaleAnim = useRef(new Animated.Value(0)).current;
+  const xpBadgeGlowAnim = useRef(new Animated.Value(0)).current;
   const [progressPercent, setProgressPercent] = useState(0);
+
+  // Dopamine feedback function - triggers satisfying animations
+  const triggerDopamineFeedback = useCallback((type: 'xp' | 'levelup' | 'rank' | 'trophy', amount?: number) => {
+    if (Platform.OS !== 'web') {
+      if (type === 'xp') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } else if (type === 'levelup' || type === 'rank') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else if (type === 'trophy') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }
+    }
+    
+    if (type === 'xp' && amount) {
+      setXpGained(amount);
+      setShowXpGain(true);
+      
+      // Reset animations
+      xpGainOpacityAnim.setValue(0);
+      xpGainTranslateYAnim.setValue(20);
+      xpGainScaleAnim.setValue(0.5);
+      xpBadgeGlowAnim.setValue(0);
+      
+      // Parallel animations for a satisfying effect
+      Animated.parallel([
+        // Fade in and scale up
+        Animated.spring(xpGainScaleAnim, {
+          toValue: 1.2,
+          friction: 5,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(xpGainOpacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(xpGainTranslateYAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        // Glow effect
+        Animated.sequence([
+          Animated.timing(xpBadgeGlowAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(xpBadgeGlowAnim, {
+            toValue: 0,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start(() => {
+        // Scale down slightly then fade out
+        Animated.sequence([
+          Animated.timing(xpGainScaleAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.delay(800),
+          Animated.parallel([
+            Animated.timing(xpGainOpacityAnim, {
+              toValue: 0,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(xpGainTranslateYAnim, {
+              toValue: -30,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ]),
+        ]).start(() => setShowXpGain(false));
+      });
+    }
+  }, []);
 
   // Request permissions
   useEffect(() => {
