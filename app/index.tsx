@@ -3119,12 +3119,30 @@ const styles = StyleSheet.create({
   historyFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#2D2D2D',
   },
   historyXp: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#F59E0B',
     fontWeight: '700',
+  },
+  historyLevelUpBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  historyLevelUpText: {
+    fontSize: 11,
+    color: '#10B981',
+    fontWeight: '600',
   },
   levelUpBadgeSmall: {
     flexDirection: 'row',
