@@ -232,7 +232,21 @@ async def complete_session(data: dict):
         raise HTTPException(status_code=404, detail="User not found")
     
     # Calculate XP based on duration and distance
-    xp_earned = int((duration / 60) * 2 + distance * 10)  # 2 XP per minute + 10 XP per km
+    # 2 XP per minute + 10 XP per km
+    xp_earned = int((duration / 60) * 2 + distance * 10)
+    
+    # Minimum XP bonus for completing any session (rewards effort!)
+    min_xp = 5  # At least 5 XP for starting a session
+    if duration >= 10:  # At least 10 seconds
+        xp_earned = max(xp_earned, min_xp)
+    
+    # Bonus XP based on duration milestones
+    if duration >= 300:  # 5+ minutes
+        xp_earned += 10
+    if duration >= 600:  # 10+ minutes
+        xp_earned += 15
+    if duration >= 1200:  # 20+ minutes
+        xp_earned += 25
     
     # Update user stats
     new_total_xp = user.get("total_xp", 0) + xp_earned
