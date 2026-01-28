@@ -34,6 +34,23 @@ import LoadingScreen from '../components/LoadingScreen';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
+// Background location task name
+const BACKGROUND_LOCATION_TASK = 'background-location-task';
+
+// Define background location task
+TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }: any) => {
+  if (error) {
+    console.error('Background location error:', error);
+    return;
+  }
+  if (data) {
+    const { locations } = data;
+    // Location data will be processed when app comes back to foreground
+    // Store in AsyncStorage or handle here
+    console.log('Background location update:', locations?.length);
+  }
+});
+
 // All ranks data
 const ALL_RANKS = [
   { id: 'debutant', name: 'Débutant', min_level: 1, color: '#6B7280', icon: '🏃' },
