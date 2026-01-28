@@ -549,16 +549,39 @@ async def get_leaderboard(device_id: str = None, rank_id: str = None, limit: int
 @app.get("/api/sessions/{device_id}")
 async def get_sessions(device_id: str, limit: int = 20):
     sessions = list(sessions_collection.find({"device_id": device_id}).sort("date", -1).limit(limit))
-    return [
-        {
-            "id": s.get("id"),
-            "duration": s.get("duration"),
-            "distance": s.get("distance"),
-            "xp_earned": s.get("xp_earned"),
-            "date": s.get("date"),
-        }
-        for s in sessions
-    ]
+    result = []
+    for s in sessions:
+        duration = s.get("duration", 0)
+        distance = s.get("distance", 0)
+        duration_min = int(duration // 60)
+        duration_sec = int(duration % 60)
+        
+        # Calculate pace (min/km)
+        if distance > 0:
+            pace_seconds = duration / distance
+            pace_min = int(pace_seconds // 60)
+            pace_sec = int(pace_seconds % 60)
+            avg_pace = f"{pace_min}:{str(pace_sec).zfill(2)}"
+        else:
+            avg_pace = "--:--"
+        
+        result.append({
+            "id": s.get("id", str(s.get("_id", ""))),
+            "completed_at": s.get("date"),
+            "duration": duration,
+            "duration_minutes": duration_min,
+            "duration_seconds": duration_sec,
+            "distance": distance,
+            "distance_km": round(distance, 2),
+            "xp_earned": s.get("xp_earned", 0),
+            "avg_pace": avg_pace,
+            "intensity": s.get("intensity", "moderate"),
+            "intensity_name": s.get("intensity_name", "Modéré"),
+            "calories": s.get("calories", int(duration / 60 * 8)),  # Estimate ~8 cal/min
+            "leveled_up": s.get("leveled_up", False),
+            "level_after": s.get("level_after"),
+        })
+    return result
 
 @app.post("/api/username")
 async def update_username(data: dict):
