@@ -20,49 +20,34 @@ interface LoadingScreenProps {
 
 export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   // Animation values
-  const logoScale = useRef(new Animated.Value(0.8)).current;
-  const logoOpacity = useRef(new Animated.Value(1)).current;
-  const titleOpacity = useRef(new Animated.Value(1)).current;
+  const logoScale = useRef(new Animated.Value(0.9)).current;
   const orbitRotation = useRef(new Animated.Value(0)).current;
-  const badgesOpacity = useRef(new Animated.Value(1)).current;
-  const glowPulse = useRef(new Animated.Value(0.3)).current;
+  const glowPulse = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
-    // Sequence d'animations
-    Animated.sequence([
-      // 1. Fade in et zoom du logo
-      Animated.parallel([
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 600,
+    // Logo pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(logoScale, {
+          toValue: 1.05,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
         Animated.timing(logoScale, {
-          toValue: 1,
-          duration: 800,
-          easing: Easing.out(Easing.back(1.5)),
+          toValue: 0.95,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ]),
-      // 2. Fade in du titre
-      Animated.timing(titleOpacity, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      // 3. Fade in des badges
-      Animated.timing(badgesOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
+      ])
+    ).start();
 
     // Animation de rotation continue des badges
     Animated.loop(
       Animated.timing(orbitRotation, {
         toValue: 1,
-        duration: 20000,
+        duration: 15000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
@@ -72,14 +57,14 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowPulse, {
-          toValue: 0.6,
-          duration: 1500,
+          toValue: 0.7,
+          duration: 2000,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
         Animated.timing(glowPulse, {
-          toValue: 0.3,
-          duration: 1500,
+          toValue: 0.4,
+          duration: 2000,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
@@ -97,95 +82,90 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
     outputRange: ['0deg', '-360deg'],
   });
 
-  const ORBIT_RADIUS = 120;
-  const BADGE_SIZE = 45;
+  const ORBIT_RADIUS = 115;
+  const BADGE_SIZE = 42;
 
   return (
     <LinearGradient
-      colors={['#0a0a1a', '#1a1a3a', '#0f0f2a', '#050510']}
-      locations={[0, 0.3, 0.7, 1]}
+      colors={['#0a0a1a', '#151530', '#0d0d20', '#050510']}
+      locations={[0, 0.35, 0.7, 1]}
       style={styles.container}
     >
       {/* Ambient glow effects */}
       <Animated.View style={[styles.ambientGlow, styles.glowBlue, { opacity: glowPulse }]} />
       <Animated.View style={[styles.ambientGlow, styles.glowGold, { opacity: glowPulse }]} />
 
-      {/* Orbiting badges */}
-      <Animated.View
-        style={[
-          styles.orbitContainer,
-          {
-            transform: [{ rotate: spin }],
-            opacity: badgesOpacity,
-          },
-        ]}
-      >
-        {RANK_IMAGES.map((rank, index) => {
-          const angle = (index * 60) * (Math.PI / 180);
-          const x = Math.cos(angle) * ORBIT_RADIUS;
-          const y = Math.sin(angle) * ORBIT_RADIUS;
+      {/* Central content container */}
+      <View style={styles.centerContent}>
+        {/* Orbit ring */}
+        <View style={[styles.orbitRing, { width: ORBIT_RADIUS * 2 + BADGE_SIZE + 10, height: ORBIT_RADIUS * 2 + BADGE_SIZE + 10 }]} />
 
-          return (
-            <Animated.View
-              key={rank.id}
-              style={[
-                styles.orbitBadge,
-                {
-                  transform: [
-                    { translateX: x },
-                    { translateY: y },
-                    { rotate: reverseSpin },
-                  ],
-                },
-              ]}
-            >
-              <Image
-                source={rank.source}
-                style={{ width: BADGE_SIZE, height: BADGE_SIZE, borderRadius: BADGE_SIZE / 2 }}
-                resizeMode="contain"
-              />
-            </Animated.View>
-          );
-        })}
-      </Animated.View>
+        {/* Orbiting badges */}
+        <Animated.View
+          style={[
+            styles.orbitContainer,
+            { transform: [{ rotate: spin }] },
+          ]}
+        >
+          {RANK_IMAGES.map((rank, index) => {
+            const angle = (index * 60 - 90) * (Math.PI / 180);
+            const x = Math.cos(angle) * ORBIT_RADIUS;
+            const y = Math.sin(angle) * ORBIT_RADIUS;
 
-      {/* Orbit ring */}
-      <View style={[styles.orbitRing, { width: ORBIT_RADIUS * 2 + BADGE_SIZE, height: ORBIT_RADIUS * 2 + BADGE_SIZE }]} />
+            return (
+              <Animated.View
+                key={rank.id}
+                style={[
+                  styles.orbitBadge,
+                  {
+                    transform: [
+                      { translateX: x },
+                      { translateY: y },
+                      { rotate: reverseSpin },
+                    ],
+                  },
+                ]}
+              >
+                <Image
+                  source={rank.source}
+                  style={styles.badgeImage}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            );
+          })}
+        </Animated.View>
 
-      {/* Central Logo */}
-      <Animated.View
-        style={[
-          styles.logoContainer,
-          {
-            opacity: logoOpacity,
-            transform: [{ scale: logoScale }],
-          },
-        ]}
-      >
-        {/* Glow behind logo */}
-        <Animated.View style={[styles.logoGlow, { opacity: glowPulse }]} />
-        
-        {/* Logo circle */}
-        <View style={styles.logoCircle}>
-          <Text style={styles.logoIcon}>🏃</Text>
-        </View>
-      </Animated.View>
+        {/* Central Logo */}
+        <Animated.View
+          style={[
+            styles.logoContainer,
+            { transform: [{ scale: logoScale }] },
+          ]}
+        >
+          {/* Glow behind logo */}
+          <Animated.View style={[styles.logoGlow, { opacity: glowPulse }]} />
+          
+          {/* Logo circle */}
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoIcon}>🏃</Text>
+          </View>
+        </Animated.View>
+      </View>
 
       {/* Title */}
-      <Animated.View style={[styles.titleContainer, { opacity: titleOpacity }]}>
+      <View style={styles.titleContainer}>
         <Text style={styles.titleRun}>RUN</Text>
         <Text style={styles.titleLeveling}>LEVELING</Text>
-      </Animated.View>
+      </View>
 
       {/* Tagline */}
-      <Animated.Text style={[styles.tagline, { opacity: titleOpacity }]}>
-        Cours. Monte en niveau. Deviens légende.
-      </Animated.Text>
+      <Text style={styles.tagline}>Cours. Monte en niveau. Deviens légende.</Text>
 
       {/* Loading dots */}
-      <Animated.View style={[styles.loadingDots, { opacity: titleOpacity }]}>
+      <View style={styles.loadingDots}>
         <LoadingDots />
-      </Animated.View>
+      </View>
     </LinearGradient>
   );
 }
@@ -250,37 +230,48 @@ const styles = StyleSheet.create({
   },
   ambientGlow: {
     position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
   },
   glowBlue: {
     backgroundColor: '#3B82F6',
-    top: SCREEN_HEIGHT * 0.2,
-    left: -50,
-    opacity: 0.15,
+    top: SCREEN_HEIGHT * 0.15,
+    left: -80,
   },
   glowGold: {
     backgroundColor: '#F59E0B',
-    bottom: SCREEN_HEIGHT * 0.2,
-    right: -50,
-    opacity: 0.1,
+    bottom: SCREEN_HEIGHT * 0.15,
+    right: -80,
+  },
+  centerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 300,
+    height: 300,
   },
   orbitContainer: {
     position: 'absolute',
-    width: 300,
-    height: 300,
     alignItems: 'center',
     justifyContent: 'center',
+    width: 300,
+    height: 300,
   },
   orbitBadge: {
     position: 'absolute',
+    width: 42,
+    height: 42,
+  },
+  badgeImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
   },
   orbitRing: {
     position: 'absolute',
     borderRadius: 200,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.15)',
+    borderColor: 'rgba(59, 130, 246, 0.2)',
     borderStyle: 'dashed',
   },
   logoContainer: {
@@ -290,60 +281,49 @@ const styles = StyleSheet.create({
   },
   logoGlow: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
     backgroundColor: '#3B82F6',
   },
   logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     backgroundColor: '#1a1a3a',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
     borderColor: '#3B82F6',
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
   },
   logoIcon: {
-    fontSize: 45,
+    fontSize: 40,
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginTop: 30,
+    marginTop: 25,
   },
   titleRun: {
-    fontSize: 36,
+    fontSize: 34,
     fontWeight: '900',
     color: '#3B82F6',
     letterSpacing: 4,
-    textShadowColor: '#3B82F6',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
   titleLeveling: {
-    fontSize: 36,
+    fontSize: 34,
     fontWeight: '900',
     color: '#F59E0B',
     letterSpacing: 2,
-    textShadowColor: '#F59E0B',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   },
   tagline: {
     color: '#6B7280',
-    fontSize: 14,
-    marginTop: 12,
-    letterSpacing: 1,
+    fontSize: 13,
+    marginTop: 10,
+    letterSpacing: 0.5,
   },
   loadingDots: {
-    marginTop: 40,
+    marginTop: 35,
   },
   dotsContainer: {
     flexDirection: 'row',
