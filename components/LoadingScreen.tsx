@@ -20,9 +20,8 @@ interface LoadingScreenProps {
 
 export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps) {
   // Animation values
-  const logoScale = useRef(new Animated.Value(0.9)).current;
+  const logoScale = useRef(new Animated.Value(0.95)).current;
   const orbitRotation = useRef(new Animated.Value(0)).current;
-  const glowPulse = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
     // Logo pulse animation
@@ -52,24 +51,6 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
         useNativeDriver: true,
       })
     ).start();
-
-    // Animation de pulse du glow
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowPulse, {
-          toValue: 0.7,
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowPulse, {
-          toValue: 0.4,
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
   }, []);
 
   const spin = orbitRotation.interpolate({
@@ -82,8 +63,8 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
     outputRange: ['0deg', '-360deg'],
   });
 
-  const ORBIT_RADIUS = 115;
-  const BADGE_SIZE = 42;
+  const ORBIT_RADIUS = 110;
+  const BADGE_SIZE = 40;
 
   return (
     <LinearGradient
@@ -91,14 +72,14 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
       locations={[0, 0.35, 0.7, 1]}
       style={styles.container}
     >
-      {/* Ambient glow effects */}
-      <Animated.View style={[styles.ambientGlow, styles.glowBlue, { opacity: glowPulse }]} />
-      <Animated.View style={[styles.ambientGlow, styles.glowGold, { opacity: glowPulse }]} />
+      {/* Subtle ambient glow - background layer */}
+      <View style={[styles.ambientGlow, styles.glowBlue]} />
+      <View style={[styles.ambientGlow, styles.glowGold]} />
 
-      {/* Central content container */}
-      <View style={styles.centerContent}>
+      {/* Main content - foreground layer */}
+      <View style={styles.mainContent}>
         {/* Orbit ring */}
-        <View style={[styles.orbitRing, { width: ORBIT_RADIUS * 2 + BADGE_SIZE + 10, height: ORBIT_RADIUS * 2 + BADGE_SIZE + 10 }]} />
+        <View style={[styles.orbitRing, { width: ORBIT_RADIUS * 2 + BADGE_SIZE + 20, height: ORBIT_RADIUS * 2 + BADGE_SIZE + 20 }]} />
 
         {/* Orbiting badges */}
         <Animated.View
@@ -144,27 +125,27 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
           ]}
         >
           {/* Glow behind logo */}
-          <Animated.View style={[styles.logoGlow, { opacity: glowPulse }]} />
+          <View style={styles.logoGlow} />
           
           {/* Logo circle */}
           <View style={styles.logoCircle}>
             <Text style={styles.logoIcon}>🏃</Text>
           </View>
         </Animated.View>
-      </View>
 
-      {/* Title */}
-      <View style={styles.titleContainer}>
-        <Text style={styles.titleRun}>RUN</Text>
-        <Text style={styles.titleLeveling}>LEVELING</Text>
-      </View>
+        {/* Title */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.titleRun}>RUN</Text>
+          <Text style={styles.titleLeveling}>LEVELING</Text>
+        </View>
 
-      {/* Tagline */}
-      <Text style={styles.tagline}>Cours. Monte en niveau. Deviens légende.</Text>
+        {/* Tagline */}
+        <Text style={styles.tagline}>Cours. Monte en niveau. Deviens légende.</Text>
 
-      {/* Loading dots */}
-      <View style={styles.loadingDots}>
-        <LoadingDots />
+        {/* Loading dots */}
+        <View style={styles.loadingDots}>
+          <LoadingDots />
+        </View>
       </View>
     </LinearGradient>
   );
@@ -225,75 +206,69 @@ function LoadingDots() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   ambientGlow: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    zIndex: 0,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    opacity: 0.15,
   },
   glowBlue: {
     backgroundColor: '#3B82F6',
-    top: SCREEN_HEIGHT * 0.1,
-    left: -60,
-    opacity: 0.2,
+    top: 80,
+    left: -30,
   },
   glowGold: {
     backgroundColor: '#F59E0B',
-    bottom: SCREEN_HEIGHT * 0.1,
-    right: -60,
-    opacity: 0.15,
+    bottom: 120,
+    right: -30,
   },
-  centerContent: {
+  mainContent: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 300,
-    height: 300,
-    zIndex: 10,
   },
   orbitContainer: {
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 300,
-    height: 300,
+    width: 280,
+    height: 280,
   },
   orbitBadge: {
     position: 'absolute',
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
   },
   badgeImage: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   orbitRing: {
     position: 'absolute',
     borderRadius: 200,
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.2)',
+    borderColor: 'rgba(59, 130, 246, 0.25)',
     borderStyle: 'dashed',
   },
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
   },
   logoGlow: {
     position: 'absolute',
-    width: 130,
-    height: 130,
-    borderRadius: 65,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: '#3B82F6',
+    opacity: 0.25,
   },
   logoCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 85,
+    height: 85,
+    borderRadius: 42.5,
     backgroundColor: '#1a1a3a',
     alignItems: 'center',
     justifyContent: 'center',
@@ -301,7 +276,7 @@ const styles = StyleSheet.create({
     borderColor: '#3B82F6',
   },
   logoIcon: {
-    fontSize: 40,
+    fontSize: 38,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -309,13 +284,13 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   titleRun: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '900',
     color: '#3B82F6',
     letterSpacing: 4,
   },
   titleLeveling: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '900',
     color: '#F59E0B',
     letterSpacing: 2,
