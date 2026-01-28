@@ -637,10 +637,18 @@ export default function Index() {
     );
   };
 
-  const stopLocationTracking = () => {
+  const stopLocationTracking = async () => {
     if (locationSubscription.current) {
       locationSubscription.current.remove();
       locationSubscription.current = null;
+    }
+    
+    // Stop background location tracking
+    if (Platform.OS !== 'web') {
+      const isTracking = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+      if (isTracking) {
+        await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+      }
     }
   };
 
