@@ -375,9 +375,13 @@ export default function Index() {
     }
   }, []);
 
-  const fetchLeaderboard = useCallback(async () => {
+  const fetchLeaderboard = useCallback(async (rankFilter?: string | null) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/leaderboard?device_id=${deviceId.current}&limit=50`);
+      let url = `${BACKEND_URL}/api/leaderboard?device_id=${deviceId.current}&limit=50`;
+      if (rankFilter) {
+        url += `&rank_id=${rankFilter}`;
+      }
+      const response = await fetch(url);
       const data = await response.json();
       setLeaderboard(data);
     } catch (error) {
