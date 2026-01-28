@@ -2921,11 +2921,39 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   trophySection: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: '#9CA3AF',
-    marginTop: 6,
-    marginBottom: 6,
+    marginTop: 16,
+    marginBottom: 10,
+  },
+  trophyFilterContainer: {
+    marginBottom: 12,
+    paddingVertical: 4,
+  },
+  trophyFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginRight: 8,
+    gap: 4,
+  },
+  trophyFilterChipActive: {
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+  },
+  trophyFilterIcon: {
+    fontSize: 14,
+  },
+  trophyFilterText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9CA3AF',
+  },
+  trophyFilterTextActive: {
+    color: '#F59E0B',
   },
   trophyCard: {
     flexDirection: 'row',
@@ -2938,13 +2966,22 @@ const styles = StyleSheet.create({
   },
   trophyUnlocked: {
     borderColor: '#F59E0B',
+    backgroundColor: 'rgba(245, 158, 11, 0.05)',
   },
   trophyLocked: {
     borderColor: '#2D2D2D',
   },
+  trophyIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
   trophyIcon: {
-    fontSize: 28,
-    marginRight: 10,
+    fontSize: 24,
   },
   trophyInfo: {
     flex: 1,
@@ -2957,15 +2994,33 @@ const styles = StyleSheet.create({
   trophyDescription: {
     fontSize: 11,
     color: '#9CA3AF',
-    marginTop: 1,
+    marginTop: 2,
   },
   trophyReward: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginLeft: 8,
   },
+  trophyRewardEarned: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
   trophyXp: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: '#F59E0B',
+  },
+  trophyXpEarned: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#10B981',
   },
   historyCard: {
     backgroundColor: '#1A1A1A',
