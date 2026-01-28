@@ -2521,8 +2521,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 100,
   },
+  xpGainGlow: {
+    position: 'absolute',
+    width: 120,
+    height: 50,
+    borderRadius: 25,
+    transform: [{ scaleX: 1.5 }, { scaleY: 1.2 }],
+  },
+  xpGainBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 25,
+    borderWidth: 2,
+    gap: 8,
+  },
   xpGainText: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '900',
   },
   liveStatsContainer: {
