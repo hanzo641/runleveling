@@ -1553,37 +1553,37 @@ export default function Index() {
               <View style={styles.historyHeader}>
                 <View style={styles.historyDate}>
                   <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
-                  <Text style={styles.historyDateText}>{formatDate(item.completed_at)}</Text>
+                  <Text style={styles.historyDateText}>{formatDate(item.completed_at || item.date)}</Text>
                 </View>
                 <View style={[
                   styles.historyIntensity,
                   { backgroundColor: INTENSITY_OPTIONS.find(i => i.id === item.intensity)?.color || '#6B7280' }
                 ]}>
-                  <Text style={styles.historyIntensityText}>{item.intensity_name}</Text>
+                  <Text style={styles.historyIntensityText}>{item.intensity_name || 'Course'}</Text>
                 </View>
               </View>
 
               <View style={styles.historyStats}>
                 <View style={styles.historyStat}>
                   <Ionicons name="navigate" size={16} color="#3B82F6" />
-                  <Text style={styles.historyStatValue}>{item.distance_km.toFixed(2)} km</Text>
+                  <Text style={styles.historyStatValue}>{(item.distance_km || item.distance || 0).toFixed(2)} km</Text>
                 </View>
                 <View style={styles.historyStat}>
                   <Ionicons name="time-outline" size={16} color="#6366F1" />
-                  <Text style={styles.historyStatValue}>{item.duration_minutes}:{(item.duration_seconds || 0).toString().padStart(2, '0')}</Text>
+                  <Text style={styles.historyStatValue}>{item.duration_minutes || 0}:{(item.duration_seconds || 0).toString().padStart(2, '0')}</Text>
                 </View>
                 <View style={styles.historyStat}>
                   <Ionicons name="speedometer" size={16} color="#10B981" />
-                  <Text style={styles.historyStatValue}>{item.avg_pace}/km</Text>
+                  <Text style={styles.historyStatValue}>{item.avg_pace || '--:--'}/km</Text>
                 </View>
               </View>
 
               <View style={styles.historyFooter}>
-                <Text style={styles.historyXp}>+{item.xp_earned} XP</Text>
+                <Text style={styles.historyXp}>+{item.xp_earned || 0} XP</Text>
                 {item.leveled_up && (
-                  <View style={styles.levelUpBadgeSmall}>
+                  <View style={styles.historyLevelUpBadge}>
                     <Ionicons name="arrow-up" size={12} color="#10B981" />
-                    <Text style={styles.levelUpBadgeText}>Niv. {item.level_after}</Text>
+                    <Text style={styles.historyLevelUpText}>Niv. {item.level_after}</Text>
                   </View>
                 )}
                 <Ionicons name="chevron-forward" size={16} color="#6B7280" />
