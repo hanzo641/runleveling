@@ -1920,22 +1920,42 @@ export default function Index() {
             <View style={styles.levelUpContent}>
               {levelUpData?.rankedUp ? (
                 <>
-                  <View style={[styles.levelUpBadgeBig, { backgroundColor: levelUpData.rank.color }]}>
-                    <Text style={styles.levelUpBadgeIconBig}>{levelUpData.rank.icon}</Text>
+                  <View style={styles.levelUpSparkles}>
+                    <Text style={styles.sparkleEmoji}>✨</Text>
+                    <Text style={[styles.sparkleEmoji, { left: '80%' }]}>🌟</Text>
+                    <Text style={[styles.sparkleEmoji, { top: '70%', left: '10%' }]}>⭐</Text>
                   </View>
-                  <Text style={styles.levelUpTitle}>NOUVEAU RANG!</Text>
+                  <RankBadge rankId={levelUpData.rank.id} size={80} />
+                  <Text style={styles.levelUpTitle}>🎉 NOUVEAU RANG!</Text>
                   <Text style={[styles.levelUpRankName, { color: levelUpData.rank.color }]}>
                     {levelUpData.rank.name}
+                  </Text>
+                  <Text style={styles.levelUpMessage}>
+                    {levelUpData.rank.id === 'jogger' && "Tu progresses bien ! Continue comme ça 💪"}
+                    {levelUpData.rank.id === 'coureur' && "Tu deviens un vrai coureur ! Impressionnant 🏃"}
+                    {levelUpData.rank.id === 'athlete' && "Niveau athlète atteint ! Tu es une machine ⚡"}
+                    {levelUpData.rank.id === 'champion' && "Champion ! Tu fais partie de l'élite 🏆"}
+                    {levelUpData.rank.id === 'maitre' && "MAÎTRE ! Tu as atteint le sommet ! 👑"}
                   </Text>
                 </>
               ) : (
                 <>
-                  <Ionicons name="arrow-up-circle" size={80} color="#6366F1" />
-                  <Text style={styles.levelUpTitle}>NIVEAU SUPÉRIEUR!</Text>
+                  <View style={styles.levelUpIconContainer}>
+                    <Ionicons name="arrow-up-circle" size={70} color="#6366F1" />
+                    <View style={styles.levelUpBadgeSmall}>
+                      <Text style={styles.levelUpBadgeText}>{levelUpData?.level}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.levelUpTitle}>🚀 NIVEAU SUPÉRIEUR!</Text>
+                  <Text style={styles.levelUpLevel}>Niveau {levelUpData?.level}</Text>
+                  <Text style={styles.levelUpMessage}>
+                    {LEVEL_UP_MESSAGES[Math.floor(Math.random() * LEVEL_UP_MESSAGES.length)]}
+                  </Text>
                 </>
               )}
-              <Text style={styles.levelUpLevel}>Niveau {levelUpData?.level}</Text>
-              <Text style={styles.levelUpTap}>Touchez pour continuer</Text>
+              <TouchableOpacity style={styles.levelUpButton} onPress={closeLevelUp}>
+                <Text style={styles.levelUpButtonText}>Continuer</Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
         </TouchableOpacity>
