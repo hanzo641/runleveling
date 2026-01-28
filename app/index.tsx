@@ -1356,28 +1356,33 @@ export default function Index() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <LinearGradient 
+      colors={['#0a0a15', '#101025', '#0d0d1a', '#080810']} 
+      locations={[0, 0.3, 0.7, 1]}
+      style={styles.gradientContainer}
+    >
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLogoContainer}>
-          <Text style={styles.headerTitleRun}>RUN</Text>
-          <Text style={styles.headerTitleLeveling}>LEVELING</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLogoContainer}>
+            <Text style={styles.headerTitleRun}>RUN</Text>
+            <Text style={styles.headerTitleLeveling}>LEVELING</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Tab Content */}
-      {activeTab === 'home' && renderHomeTab()}
-      {activeTab === 'quests' && renderQuestsTab()}
-      {activeTab === 'trophies' && renderTrophiesTab()}
-      {activeTab === 'history' && renderHistoryTab()}
-      {activeTab === 'leaderboard' && renderLeaderboardTab()}
+        {/* Tab Content */}
+        {activeTab === 'home' && renderHomeTab()}
+        {activeTab === 'quests' && renderQuestsTab()}
+        {activeTab === 'trophies' && renderTrophiesTab()}
+        {activeTab === 'history' && renderHistoryTab()}
+        {activeTab === 'leaderboard' && renderLeaderboardTab()}
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        {[
-          { id: 'home', icon: 'home' },
+        {/* Bottom Navigation */}
+        <View style={styles.bottomNav}>
+          {[
+            { id: 'home', icon: 'home' },
           { id: 'quests', icon: 'flag' },
           { id: 'trophies', icon: 'trophy' },
           { id: 'history', icon: 'time' },
