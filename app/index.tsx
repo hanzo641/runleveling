@@ -3727,8 +3727,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   leagueChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     marginRight: 10,
@@ -3739,8 +3739,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(99, 102, 241, 0.2)',
     borderColor: '#6366F1',
   },
+  leagueChipContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   leagueChipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#9CA3AF',
   },
