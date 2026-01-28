@@ -1454,8 +1454,8 @@ export default function Index() {
                 </Text>
               </View>
 
-              <View style={[styles.leaderboardXpBadge, { backgroundColor: item.rank?.color || '#6B7280' }]}>
-                <Text style={styles.leaderboardXp}>{item.total_xp}</Text>
+              <View style={[styles.leaderboardXpBadge, { backgroundColor: `${item.rank?.color}22` || '#6B728022' }]}>
+                <Text style={[styles.leaderboardXp, { color: item.rank?.color || '#F59E0B' }]}>{item.total_xp}</Text>
               </View>
             </View>
           )}
