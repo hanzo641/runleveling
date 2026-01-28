@@ -1,0 +1,257 @@
+<analysis>
+**original_problem_statement:**
+The user initially reported a critical crash on iOS native builds. After a lengthy and complex debugging process that involved fixing package dependencies and build configurations, the user decided to reset the entire workspace to a  branch from their personal GitHub repository, which is considered a stable, non-crashing base.
+
+The user then provided a new, comprehensive list of features to be implemented on this stable base.
+
+**PRODUCT REQUIREMENTS (New):**
+1.  **Premium Loading Screen:** Create a stylish, animated loading screen with a dark gradient, a centered RUNLEVELING logo that slowly zooms, and the 6 rank badges orbiting it.
+2.  **Global UI Overhaul:** Replace the flat black app background with a dark gradient, subtle depth effects, and a glow around important elements.
+3.  **Background Execution:** Ensure the run tracking continues to work even when the phone screen is locked, using proper Expo background task APIs.
+4.  **Rank-Based Leaderboards (Leagues):** Rework the global leaderboard into separate leagues for each rank (Débutant, Jogger, etc.).
+5.  **Dopamine Feedback:** Enhance the user experience with micro-animations (scale, glow, pulse) for events like gaining XP, leveling up, or changing rank.
+6.  **Quests & Trophies:** Introduce daily quests and a system for earning trophies.
+
+**User's preferred language**: French (français). The next agent MUST respond in French.
+
+**what currently exists?**
+The workspace has been completely reset by checking out the  branch from the user's public GitHub repository. This new base is an Expo/React Native app with a FastAPI backend. The agent has re-installed all dependencies and re-created the necessary  files.
+
+Work has begun on the new feature requests:
+- A new  component has been created, and  has been installed. The implementation is partially complete with a gradient background and some glow effects, but the core animations (orbiting badges, logo zoom) are not yet working as intended.
+- The main application background has been successfully updated from a flat color to a .
+- The packages  and  have been installed to prepare for background location tracking. The agent has started adding the necessary task definitions and modifying the location tracking functions.
+
+**Last working item**:
+-   **Last item agent was working:** The agent was implementing the Leagues feature for the leaderboards. It had located the  function in  and started modifying it to introduce a new UI with filters for each rank.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N (Work was in progress, no testing was performed on this specific change).
+-   **Which testing method agent to use?** manual testing by screenshot tool
+-   **User Testing Done:** N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1: (P1) Incomplete Backend Server File**
+    -   **Description:** When the agent checked out the user's  branch, the  file was missing. To prevent the backend service from failing, the agent created a minimal placeholder  file with a basic  endpoint. This placeholder is likely missing most of the required backend logic (session completion, Strava integration, etc.).
+    -   **Attempted fixes:** A minimal placeholder was created to ensure the service could run.
+    -   **Next debug checklist:**
+        1.  Ask the user to provide the correct and complete  file from their stable  branch.
+        2.  If the user doesn't have it, the backend logic will need to be re-implemented based on the frontend's API calls.
+    -   **Why fix this issue and what will be achieved with the fix?** The application's core functionality, such as saving runs and tracking progress, depends on a complete backend. The current placeholder only allows the app to load without crashing.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on other issue:** None.
+
+**In progress Task List**:
+-   **Task 1: (P0) Finalize Premium Loading Screen**
+    -   **Description:** Implement the user's vision for the animated loading screen.
+    -   **Where to resume:** The  component exists but has issues. The glow effects were hiding the content, and the orbiting badge animation was not successfully implemented. The agent needs to fix the layering (z-index) and implement the  logic for the orbiting badges and the logo zoom.
+    -   **What will be achieved with this?** A professional, engaging loading experience that matches modern mobile game standards.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Blocked on something:** None.
+
+-   **Task 2: (P1) Implement Background Location Tracking**
+    -   **Description:** Allow the app to continue tracking a user's run when the screen is locked.
+    -   **Where to resume:** The necessary packages are installed, and a background task () is defined in . The  and  functions have been modified. The implementation needs to be tested and verified on a real device, and permissions in  must be correctly configured for background location access.
+    -   **What will be achieved with this?** A core feature for any running app, preventing data loss if the user's phone locks during a session.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** frontend (requires native build/Expo Go on a device)
+    -   **Blocked on something:** None.
+
+**Upcoming and Future Tasks**
+- **P1: Complete Rank-Based Leaderboards (Leagues) (Phase 4):** Finish the UI and logic in  to allow users to view leaderboards filtered by their current rank/league. This will also require backend support to filter the data.
+- **P2: Implement Dopamine Feedback Animations (Phase 5):** Add micro-animations for key progression events like gaining XP, leveling up, and changing rank to make the experience more rewarding.
+- **P3: Implement UI for Daily Quests & Trophies (Phase 7):** The data structures (, ) exist in , but the UI tabs for them need to be built out to display available quests, progress, and earned trophies.
+
+**Completed work in this session**
+- **Project Reset:** Successfully switched the entire workspace to the user's  branch from GitHub.
+- **Dependency Management:** Re-installed all npm <command>
+
+Usage:
+
+npm install        install all the dependencies in your project
+npm install <foo>  add the <foo> dependency to your project
+npm test           run this project's tests
+npm run <foo>      run the script named <foo>
+npm <command> -h   quick help on <command>
+npm -l             display usage info for all commands
+npm help <term>    search for help on <term>
+npm help npm       more involved overview
+
+All commands:
+
+    access, adduser, audit, bugs, cache, ci, completion,
+    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
+    edit, exec, explain, explore, find-dupes, fund, get, help,
+    help-search, hook, init, install, install-ci-test,
+    install-test, link, ll, login, logout, ls, org, outdated,
+    owner, pack, ping, pkg, prefix, profile, prune, publish,
+    query, rebuild, repo, restart, root, run-script, sbom,
+    search, set, shrinkwrap, star, stars, start, stop, team,
+    test, token, uninstall, unpublish, unstar, update, version,
+    view, whoami
+
+Specify configs in the ini-formatted file:
+    /root/.npmrc
+or on the command line via: npm <command> --key=value
+
+More configuration info: npm help config
+Configuration fields: npm help 7 config
+
+npm@10.8.2 /usr/lib/node_modules/npm and 
+Usage:   
+  pip <command> [options]
+
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
+
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5) dependencies for the new codebase.
+- **Environment Setup:** Re-created  files for the frontend and backend.
+- **Critical Backend Fix:** Created a placeholder  to allow the backend service to run after discovering the file was missing.
+- **UI Improvement:** Implemented a global dark gradient background for the entire application, replacing the previous flat black background.
+- **Initial Feature Scaffolding:**
+    - Created a new  component.
+    - Installed , , and .
+    - Started implementing the logic for background location tracking.
+
+**Earlier issues found/mentioned but not fixed**
+- The implementation of the **Premium Loading Screen** is incomplete and buggy. The agent struggled with the animations and layering, temporarily removing features to debug. This task needs to be revisited and completed correctly.
+
+**Known issue recurrence from previous fork**
+- **iOS Native Crash:** The majority of the previous session was spent debugging a persistent crash on native iOS builds. The root causes were identified as package dependency mismatches and main thread blocking. Although the dependencies have been updated and the codebase was reset to a stable branch, the next agent must be extremely cautious. Any new complex animations or heavy processing at startup could re-introduce this watchdog timeout crash.
+
+**Code Architecture**
+After the M	package-lock.json, the project structure has changed. The  and  folders have been removed, and all files are now in the  root.
+
+
+**Key Technical Concepts**
+- **Frontend:** React Native, Expo, , , , React Native  API.
+- **Backend:** FastAPI, Python, MongoDB.
+- **Architecture:** The project has been reset to a state where the frontend code is a single, large  file. A new  component has been added. The backend is a single  file, which is currently just a placeholder.
+
+**key DB schema**
+- **users:** , , ,  (sub-document)
+- **sessions:** , , , , , 
+
+**All files of reference**
+- : The monolithic file containing the entire application logic. It has been modified to add a gradient background and start the background task implementation.
+- : A new file created to house the logic for the animated loading screen. It is currently in a partially working state.
+- : A critical file that was missing and has been replaced by a minimal placeholder. It needs to be replaced with the correct, full version.
+
+**Areas that need refactoring**:
+-  is over 3600 lines long and contains UI, state management, API calls, and business logic for every feature. It is critically in need of being broken down into smaller, reusable components (e.g., , , ) and hooks (e.g., , ).
+
+**key api endpoints**
+- : Fetches user progress (this is the only endpoint in the current placeholder ).
+- *Presumably Missing:* , , Strava endpoints, etc.
+
+**Critical Info for New Agent**
+- **Project Base is New:** You are working on a fresh checkout from the user's  branch. The previous work and files are gone.
+- **Backend is Incomplete:** The  is a placeholder. You must get the real file from the user or re-implement the backend logic. Do not assume the backend is functional beyond serving the basic progress data.
+- **iOS Stability is Fragile:** The previous session was dominated by a native iOS crash. Be extremely mindful of performance, especially at startup. Avoid blocking the main thread. Use  for heavy tasks and keep animations efficient.
+- **User's PRD is the Goal:** The user's message (#467) is now the primary source of truth for all tasks. Follow the objectives listed there in a phased approach.
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User:** Asks to continue with the next features. (PENDING - Agent was working on it)
+2.  **User:** Checks if the app is complete with the latest images or if it's the hello world version. (RESOLVED)
+3.  **User:** Asks how to cancel the stuck build. (RESOLVED)
+4.  **User:** Reports the new build has been stuck for 73 minutes. (RESOLVED)
+5.  **User:** Asks to switch to the  branch on GitHub as the new stable base. (RESOLVED)
+6.  **User:** Provides a massive, detailed list of new features (new PRD). (PENDING)
+7.  **User:** Confirms go for the agent to start working on the new plan. (RESOLVED)
+8.  **User:** tu peux reprendre (you can continue). (RESOLVED)
+9.  **User:** Provides the GitHub repository URL. (RESOLVED)
+10. **User:** Confirms the repository is now public. (RESOLVED)
+
+**Project Health Check:**
+- **Broken:** The backend is non-functional beyond a single placeholder endpoint. Core features like saving runs will not work.
+- **Mocked:** The  file is effectively a mock.
+
+**3rd Party Integrations**
+- : For GPS tracking.
+- : For push notifications.
+- : For UI gradients.
+-  / : For background tasks.
+- **Strava API:** Backend logic is currently missing but was present in a previous version of the codebase.
+
+**Testing status**
+- Testing agent used after significant changes: NO
+- Troubleshoot agent used after agent stuck in loop: YES (in the previous, now-discarded, session)
+- Test files created: None.
+- Known regressions: The entire backend logic is missing compared to the state before the M	package-lock.json.
+
+**What agent forgot to execute**
+- The agent did not ask the user for the complete  file after discovering it was missing from the git repository. It created a placeholder to proceed, but this leaves the backend in a broken state.
+- The implementation of the animated loading screen was left in a half-finished state. The agent moved on to the next task after getting stuck on the animation logic.
+
+</analysis>
