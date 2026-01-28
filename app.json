@@ -14,7 +14,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "RunLeveling utilise ta position pour tracker tes courses et calculer la distance parcourue.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "RunLeveling utilise ta position pour tracker tes courses même en arrière-plan.",
-        "NSMotionUsageDescription": "RunLeveling utilise les capteurs de mouvement pour améliorer la précision du tracking."
+        "NSMotionUsageDescription": "RunLeveling utilise les capteurs de mouvement pour améliorer la précision du tracking.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
