@@ -1397,53 +1397,114 @@ export default function Index() {
   );
 
   // Render Trophies Tab
-  const renderTrophiesTab = () => (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <Text style={styles.sectionTitle}>Trophées</Text>
-      <Text style={styles.sectionSubtitle}>
-        {allTrophies.unlocked.length} / {allTrophies.unlocked.length + allTrophies.locked.length} débloqués
-      </Text>
+  // Trophy categories for filtering
+  const [trophyFilter, setTrophyFilter] = useState<string>('all');
+  
+  const TROPHY_CATEGORIES = [
+    { id: 'all', name: 'Tous', icon: '🏆' },
+    { id: 'sessions', name: 'Sessions', icon: '🏃' },
+    { id: 'distance', name: 'Distance', icon: '📍' },
+    { id: 'speed', name: 'Vitesse', icon: '⚡' },
+    { id: 'level', name: 'Niveau', icon: '📈' },
+    { id: 'rank', name: 'Rang', icon: '🎖️' },
+    { id: 'time', name: 'Horaire', icon: '🕐' },
+    { id: 'calories', name: 'Calories', icon: '🔥' },
+    { id: 'duration', name: 'Durée', icon: '⏱️' },
+    { id: 'special', name: 'Spécial', icon: '✨' },
+  ];
 
-      {allTrophies.unlocked.length > 0 && (
-        <>
-          <Text style={styles.trophySection}>Débloqués</Text>
-          {allTrophies.unlocked.map((trophy, index) => (
-            <View
-              key={trophy.id}
-              style={[styles.trophyCard, styles.trophyUnlocked]}
+  const renderTrophiesTab = () => {
+    const filteredUnlocked = trophyFilter === 'all' 
+      ? allTrophies.unlocked 
+      : allTrophies.unlocked.filter(t => t.category === trophyFilter);
+    
+    const filteredLocked = trophyFilter === 'all' 
+      ? allTrophies.locked 
+      : allTrophies.locked.filter(t => t.category === trophyFilter);
+
+    return (
+      <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>🏆 Trophées</Text>
+        <Text style={styles.sectionSubtitle}>
+          {allTrophies.unlocked.length} / {allTrophies.unlocked.length + allTrophies.locked.length} débloqués
+        </Text>
+
+        {/* Category Filter */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.trophyFilterContainer}>
+          {TROPHY_CATEGORIES.map(cat => (
+            <TouchableOpacity
+              key={cat.id}
+              style={[
+                styles.trophyFilterChip,
+                trophyFilter === cat.id && styles.trophyFilterChipActive
+              ]}
+              onPress={() => setTrophyFilter(cat.id)}
             >
-              <Text style={styles.trophyIcon}>{trophy.icon}</Text>
-              <View style={styles.trophyInfo}>
-                <Text style={styles.trophyName}>{trophy.name}</Text>
-                <Text style={styles.trophyDescription}>{trophy.description}</Text>
-              </View>
-              <View style={styles.trophyReward}>
-                <Text style={styles.trophyXp}>+{trophy.xp_reward}</Text>
-              </View>
-            </View>
+              <Text style={styles.trophyFilterIcon}>{cat.icon}</Text>
+              <Text style={[
+                styles.trophyFilterText,
+                trophyFilter === cat.id && styles.trophyFilterTextActive
+              ]}>
+                {cat.name}
+              </Text>
+            </TouchableOpacity>
           ))}
-        </>
-      )}
+        </ScrollView>
 
-      {allTrophies.locked.length > 0 && (
-        <>
-          <Text style={styles.trophySection}>À Débloquer</Text>
-          {allTrophies.locked.map((trophy) => (
-            <View key={trophy.id} style={[styles.trophyCard, styles.trophyLocked]}>
-              <Text style={[styles.trophyIcon, { opacity: 0.3 }]}>{trophy.icon}</Text>
-              <View style={styles.trophyInfo}>
-                <Text style={[styles.trophyName, { color: '#6B7280' }]}>{trophy.name}</Text>
-                <Text style={styles.trophyDescription}>{trophy.description}</Text>
+        {filteredUnlocked.length > 0 && (
+          <>
+            <Text style={styles.trophySection}>✅ Débloqués ({filteredUnlocked.length})</Text>
+            {filteredUnlocked.map((trophy) => (
+              <View
+                key={trophy.id}
+                style={[styles.trophyCard, styles.trophyUnlocked]}
+              >
+                <View style={styles.trophyIconContainer}>
+                  <Text style={styles.trophyIcon}>{trophy.icon}</Text>
+                </View>
+                <View style={styles.trophyInfo}>
+                  <Text style={styles.trophyName}>{trophy.name}</Text>
+                  <Text style={styles.trophyDescription}>{trophy.description}</Text>
+                </View>
+                <View style={styles.trophyRewardEarned}>
+                  <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                  <Text style={styles.trophyXpEarned}>+{trophy.xp_reward}</Text>
+                </View>
               </View>
-              <View style={styles.trophyReward}>
-                <Text style={[styles.trophyXp, { color: '#6B7280' }]}>+{trophy.xp_reward}</Text>
+            ))}
+          </>
+        )}
+
+        {filteredLocked.length > 0 && (
+          <>
+            <Text style={styles.trophySection}>🔒 À Débloquer ({filteredLocked.length})</Text>
+            {filteredLocked.map((trophy) => (
+              <View key={trophy.id} style={[styles.trophyCard, styles.trophyLocked]}>
+                <View style={[styles.trophyIconContainer, { backgroundColor: '#1F1F1F' }]}>
+                  <Text style={[styles.trophyIcon, { opacity: 0.4 }]}>{trophy.icon}</Text>
+                </View>
+                <View style={styles.trophyInfo}>
+                  <Text style={[styles.trophyName, { color: '#6B7280' }]}>{trophy.name}</Text>
+                  <Text style={styles.trophyDescription}>{trophy.description}</Text>
+                </View>
+                <View style={styles.trophyReward}>
+                  <Ionicons name="star" size={14} color="#4B5563" />
+                  <Text style={[styles.trophyXp, { color: '#4B5563' }]}>+{trophy.xp_reward}</Text>
+                </View>
               </View>
-            </View>
-          ))}
-        </>
-      )}
-    </ScrollView>
-  );
+            ))}
+          </>
+        )}
+
+        {filteredUnlocked.length === 0 && filteredLocked.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="trophy-outline" size={48} color="#4B5563" />
+            <Text style={styles.emptyText}>Aucun trophée dans cette catégorie</Text>
+          </View>
+        )}
+      </ScrollView>
+    );
+  };
 
   // Render History Tab with detailed session info
   const renderHistoryTab = () => (
