@@ -2191,28 +2191,38 @@ export default function Index() {
           style={styles.modalOverlay}
         >
           <View style={styles.usernameModal}>
-            <Text style={styles.usernameModalTitle}>Ton pseudo</Text>
+            <Text style={styles.usernameModalTitle}>✏️ Choisis ton pseudo</Text>
+            <Text style={styles.usernameModalSubtitle}>
+              Ce sera ton nom dans le classement
+            </Text>
             <TextInput
               style={styles.usernameInput}
               value={newUsername}
               onChangeText={setNewUsername}
-              placeholder={progress?.username || 'Runner'}
+              placeholder="Ton pseudo..."
               placeholderTextColor="#6B7280"
               maxLength={20}
               autoFocus
             />
+            <View style={styles.usernameWarning}>
+              <Ionicons name="warning" size={16} color="#F59E0B" />
+              <Text style={styles.usernameWarningText}>
+                Attention : ce choix est définitif et ne pourra plus être modifié !
+              </Text>
+            </View>
             <View style={styles.usernameButtons}>
               <TouchableOpacity
                 style={styles.usernameCancel}
                 onPress={() => setShowUsernameModal(false)}
               >
-                <Text style={styles.usernameCancelText}>Annuler</Text>
+                <Text style={styles.usernameCancelText}>Plus tard</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.usernameSave}
                 onPress={updateUsername}
+                disabled={!newUsername.trim()}
               >
-                <Text style={styles.usernameSaveText}>Sauvegarder</Text>
+                <Text style={styles.usernameSaveText}>Confirmer</Text>
               </TouchableOpacity>
             </View>
           </View>
