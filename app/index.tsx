@@ -1426,6 +1426,7 @@ export default function Index() {
         <Text style={styles.sectionTitle}>🏆 Trophées</Text>
         <Text style={styles.sectionSubtitle}>
           {allTrophies.unlocked.length} / {allTrophies.unlocked.length + allTrophies.locked.length} débloqués
+          {allTrophies.unlocked.length + allTrophies.locked.length === 0 && ' (chargement...)'}
         </Text>
 
         {/* Category Filter */}
