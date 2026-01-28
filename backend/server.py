@@ -45,34 +45,102 @@ ALL_RANKS = [
     {"id": "maitre", "name": "Maître", "min_level": 91, "color": "#EF4444", "icon": "👑"},
 ]
 
-# Daily quests templates
+# Daily quests templates - Plus variés et motivants
 QUEST_TEMPLATES = [
-    {"type": "distance", "name": "Coureur du jour", "description": "Cours {target} km aujourd'hui", "targets": [1, 2, 3, 5], "xp_base": 30},
-    {"type": "duration", "name": "Endurance", "description": "Cours pendant {target} minutes", "targets": [10, 15, 20, 30], "xp_base": 25},
-    {"type": "sessions", "name": "Régulier", "description": "Fais {target} session(s) aujourd'hui", "targets": [1, 2], "xp_base": 40},
-    {"type": "xp", "name": "Chasseur d'XP", "description": "Gagne {target} XP aujourd'hui", "targets": [50, 100, 150], "xp_base": 35},
+    # Distance quests
+    {"type": "distance", "name": "Coureur du jour", "description": "Cours {target} km aujourd'hui", "targets": [1, 2, 3, 5], "xp_base": 30, "icon": "🏃"},
+    {"type": "distance", "name": "Explorateur", "description": "Parcours {target} km en une session", "targets": [2, 3, 5, 8], "xp_base": 40, "icon": "🗺️"},
+    
+    # Duration quests
+    {"type": "duration", "name": "Endurance", "description": "Cours pendant {target} minutes", "targets": [10, 15, 20, 30], "xp_base": 25, "icon": "⏱️"},
+    {"type": "duration", "name": "Marathon mental", "description": "Accumule {target} min de course", "targets": [20, 30, 45, 60], "xp_base": 35, "icon": "🧠"},
+    
+    # Session quests
+    {"type": "sessions", "name": "Régulier", "description": "Fais {target} session(s) aujourd'hui", "targets": [1, 2, 3], "xp_base": 40, "icon": "📅"},
+    {"type": "sessions", "name": "Double dose", "description": "Complète {target} courses", "targets": [2, 3], "xp_base": 50, "icon": "✌️"},
+    
+    # XP quests
+    {"type": "xp", "name": "Chasseur d'XP", "description": "Gagne {target} XP aujourd'hui", "targets": [50, 100, 150, 200], "xp_base": 35, "icon": "⭐"},
+    {"type": "xp", "name": "XP Hunter", "description": "Accumule {target} XP", "targets": [75, 125, 200], "xp_base": 45, "icon": "💎"},
+    
+    # Calories quests
+    {"type": "calories", "name": "Brûleur", "description": "Brûle {target} calories", "targets": [100, 200, 300, 500], "xp_base": 30, "icon": "🔥"},
+    {"type": "calories", "name": "Fournaise", "description": "Élimine {target} kcal en courant", "targets": [150, 250, 400], "xp_base": 40, "icon": "🌋"},
+    
+    # Speed/Pace quests
+    {"type": "speed", "name": "Accélérateur", "description": "Atteins {target} km/h en pointe", "targets": [8, 10, 12, 15], "xp_base": 35, "icon": "⚡"},
+    {"type": "pace", "name": "Tempo", "description": "Maintiens une allure sous {target} min/km", "targets": [7, 6, 5.5, 5], "xp_base": 45, "icon": "🎵"},
 ]
 
-# All trophies
+# All trophies - Beaucoup plus complet !
 ALL_TROPHIES = [
-    {"id": "first_run", "name": "Premier Pas", "description": "Complète ta première course", "condition": "sessions >= 1", "xp_reward": 50, "icon": "🎯"},
-    {"id": "five_sessions", "name": "En Route", "description": "Complète 5 sessions", "condition": "sessions >= 5", "xp_reward": 100, "icon": "🚀"},
-    {"id": "ten_sessions", "name": "Persévérant", "description": "Complète 10 sessions", "condition": "sessions >= 10", "xp_reward": 150, "icon": "💪"},
-    {"id": "twenty_five_sessions", "name": "Déterminé", "description": "Complète 25 sessions", "condition": "sessions >= 25", "xp_reward": 250, "icon": "🔥"},
-    {"id": "fifty_sessions", "name": "Machine", "description": "Complète 50 sessions", "condition": "sessions >= 50", "xp_reward": 500, "icon": "⚡"},
-    {"id": "marathon", "name": "Marathonien", "description": "Cours un total de 42 km", "condition": "distance >= 42", "xp_reward": 300, "icon": "🏅"},
-    {"id": "hundred_km", "name": "Centurion", "description": "Cours un total de 100 km", "condition": "distance >= 100", "xp_reward": 500, "icon": "💯"},
-    {"id": "sprinter", "name": "Sprinter", "description": "Fais une course à moins de 5 min/km", "condition": "pace < 5", "xp_reward": 200, "icon": "⚡"},
-    {"id": "early_bird", "name": "Lève-tôt", "description": "Cours avant 7h du matin", "condition": "early_run", "xp_reward": 75, "icon": "🌅"},
-    {"id": "night_owl", "name": "Noctambule", "description": "Cours après 21h", "condition": "night_run", "xp_reward": 75, "icon": "🌙"},
-    {"id": "level_10", "name": "Apprenti", "description": "Atteins le niveau 10", "condition": "level >= 10", "xp_reward": 100, "icon": "📈"},
-    {"id": "level_25", "name": "Confirmé", "description": "Atteins le niveau 25", "condition": "level >= 25", "xp_reward": 200, "icon": "🎖️"},
-    {"id": "level_50", "name": "Expert", "description": "Atteins le niveau 50", "condition": "level >= 50", "xp_reward": 400, "icon": "🏆"},
-    {"id": "jogger_rank", "name": "Jogger", "description": "Atteins le rang Jogger", "condition": "rank >= jogger", "xp_reward": 150, "icon": "🏃‍♂️"},
-    {"id": "coureur_rank", "name": "Coureur", "description": "Atteins le rang Coureur", "condition": "rank >= coureur", "xp_reward": 250, "icon": "🏅"},
-    {"id": "athlete_rank", "name": "Athlète", "description": "Atteins le rang Athlète", "condition": "rank >= athlete", "xp_reward": 400, "icon": "💪"},
-    {"id": "champion_rank", "name": "Champion", "description": "Atteins le rang Champion", "condition": "rank >= champion", "xp_reward": 600, "icon": "🏆"},
-    {"id": "maitre_rank", "name": "Maître", "description": "Atteins le rang Maître", "condition": "rank >= maitre", "xp_reward": 1000, "icon": "👑"},
+    # === SESSIONS MILESTONES ===
+    {"id": "first_run", "name": "Premier Pas", "description": "Complète ta première course", "condition": "sessions >= 1", "xp_reward": 50, "icon": "🎯", "category": "sessions"},
+    {"id": "five_sessions", "name": "En Route", "description": "Complète 5 sessions", "condition": "sessions >= 5", "xp_reward": 100, "icon": "🚀", "category": "sessions"},
+    {"id": "ten_sessions", "name": "Persévérant", "description": "Complète 10 sessions", "condition": "sessions >= 10", "xp_reward": 150, "icon": "💪", "category": "sessions"},
+    {"id": "twenty_five_sessions", "name": "Déterminé", "description": "Complète 25 sessions", "condition": "sessions >= 25", "xp_reward": 250, "icon": "🔥", "category": "sessions"},
+    {"id": "fifty_sessions", "name": "Machine", "description": "Complète 50 sessions", "condition": "sessions >= 50", "xp_reward": 500, "icon": "⚡", "category": "sessions"},
+    {"id": "hundred_sessions", "name": "Centenaire", "description": "Complète 100 sessions", "condition": "sessions >= 100", "xp_reward": 1000, "icon": "💯", "category": "sessions"},
+    {"id": "two_fifty_sessions", "name": "Légende", "description": "Complète 250 sessions", "condition": "sessions >= 250", "xp_reward": 2500, "icon": "🌟", "category": "sessions"},
+    
+    # === DISTANCE MILESTONES ===
+    {"id": "first_5k", "name": "5K Club", "description": "Cours un total de 5 km", "condition": "distance >= 5", "xp_reward": 50, "icon": "🏃", "category": "distance"},
+    {"id": "first_10k", "name": "10K Runner", "description": "Cours un total de 10 km", "condition": "distance >= 10", "xp_reward": 100, "icon": "🏃‍♂️", "category": "distance"},
+    {"id": "half_marathon", "name": "Semi-Marathonien", "description": "Cours un total de 21 km", "condition": "distance >= 21", "xp_reward": 200, "icon": "🥈", "category": "distance"},
+    {"id": "marathon", "name": "Marathonien", "description": "Cours un total de 42 km", "condition": "distance >= 42", "xp_reward": 400, "icon": "🥇", "category": "distance"},
+    {"id": "hundred_km", "name": "Centurion", "description": "Cours un total de 100 km", "condition": "distance >= 100", "xp_reward": 750, "icon": "💯", "category": "distance"},
+    {"id": "two_hundred_km", "name": "Ultra Runner", "description": "Cours un total de 200 km", "condition": "distance >= 200", "xp_reward": 1200, "icon": "🦸", "category": "distance"},
+    {"id": "five_hundred_km", "name": "Nomade", "description": "Cours un total de 500 km", "condition": "distance >= 500", "xp_reward": 2500, "icon": "🌍", "category": "distance"},
+    {"id": "thousand_km", "name": "Globetrotter", "description": "Cours un total de 1000 km", "condition": "distance >= 1000", "xp_reward": 5000, "icon": "🌎", "category": "distance"},
+    
+    # === SPEED/PACE ACHIEVEMENTS ===
+    {"id": "sprinter", "name": "Sprinter", "description": "Cours à moins de 5 min/km", "condition": "pace < 5", "xp_reward": 200, "icon": "⚡", "category": "speed"},
+    {"id": "fast_runner", "name": "Rapide", "description": "Cours à moins de 4:30 min/km", "condition": "pace < 4.5", "xp_reward": 350, "icon": "🏎️", "category": "speed"},
+    {"id": "speed_demon", "name": "Démon de Vitesse", "description": "Cours à moins de 4 min/km", "condition": "pace < 4", "xp_reward": 500, "icon": "👹", "category": "speed"},
+    {"id": "lightning", "name": "Éclair", "description": "Atteins 15 km/h", "condition": "max_speed >= 15", "xp_reward": 300, "icon": "⚡", "category": "speed"},
+    {"id": "rocket", "name": "Fusée", "description": "Atteins 18 km/h", "condition": "max_speed >= 18", "xp_reward": 500, "icon": "🚀", "category": "speed"},
+    
+    # === TIME OF DAY ===
+    {"id": "early_bird", "name": "Lève-tôt", "description": "Cours avant 7h du matin", "condition": "early_run", "xp_reward": 75, "icon": "🌅", "category": "time"},
+    {"id": "dawn_warrior", "name": "Guerrier de l'Aube", "description": "5 courses avant 7h", "condition": "early_runs >= 5", "xp_reward": 200, "icon": "☀️", "category": "time"},
+    {"id": "night_owl", "name": "Noctambule", "description": "Cours après 21h", "condition": "night_run", "xp_reward": 75, "icon": "🌙", "category": "time"},
+    {"id": "midnight_runner", "name": "Coureur de Minuit", "description": "5 courses après 21h", "condition": "night_runs >= 5", "xp_reward": 200, "icon": "🦉", "category": "time"},
+    {"id": "lunch_run", "name": "Pause Active", "description": "Cours entre 12h et 14h", "condition": "lunch_run", "xp_reward": 50, "icon": "🍽️", "category": "time"},
+    
+    # === LEVEL MILESTONES ===
+    {"id": "level_5", "name": "Démarrage", "description": "Atteins le niveau 5", "condition": "level >= 5", "xp_reward": 50, "icon": "📊", "category": "level"},
+    {"id": "level_10", "name": "Apprenti", "description": "Atteins le niveau 10", "condition": "level >= 10", "xp_reward": 100, "icon": "📈", "category": "level"},
+    {"id": "level_25", "name": "Confirmé", "description": "Atteins le niveau 25", "condition": "level >= 25", "xp_reward": 250, "icon": "🎖️", "category": "level"},
+    {"id": "level_50", "name": "Expert", "description": "Atteins le niveau 50", "condition": "level >= 50", "xp_reward": 500, "icon": "🏆", "category": "level"},
+    {"id": "level_75", "name": "Vétéran", "description": "Atteins le niveau 75", "condition": "level >= 75", "xp_reward": 750, "icon": "⭐", "category": "level"},
+    {"id": "level_100", "name": "Maître Absolu", "description": "Atteins le niveau 100", "condition": "level >= 100", "xp_reward": 1500, "icon": "👑", "category": "level"},
+    
+    # === RANK ACHIEVEMENTS ===
+    {"id": "jogger_rank", "name": "Rang Jogger", "description": "Atteins le rang Jogger", "condition": "rank >= jogger", "xp_reward": 150, "icon": "🏃‍♂️", "category": "rank"},
+    {"id": "coureur_rank", "name": "Rang Coureur", "description": "Atteins le rang Coureur", "condition": "rank >= coureur", "xp_reward": 300, "icon": "🏅", "category": "rank"},
+    {"id": "athlete_rank", "name": "Rang Athlète", "description": "Atteins le rang Athlète", "condition": "rank >= athlete", "xp_reward": 500, "icon": "💪", "category": "rank"},
+    {"id": "champion_rank", "name": "Rang Champion", "description": "Atteins le rang Champion", "condition": "rank >= champion", "xp_reward": 800, "icon": "🏆", "category": "rank"},
+    {"id": "maitre_rank", "name": "Rang Maître", "description": "Atteins le rang Maître", "condition": "rank >= maitre", "xp_reward": 1500, "icon": "👑", "category": "rank"},
+    
+    # === CALORIES ===
+    {"id": "burn_500", "name": "Brûleur", "description": "Brûle 500 calories au total", "condition": "calories >= 500", "xp_reward": 75, "icon": "🔥", "category": "calories"},
+    {"id": "burn_2000", "name": "Fournaise", "description": "Brûle 2000 calories au total", "condition": "calories >= 2000", "xp_reward": 200, "icon": "🌋", "category": "calories"},
+    {"id": "burn_5000", "name": "Incendie", "description": "Brûle 5000 calories au total", "condition": "calories >= 5000", "xp_reward": 400, "icon": "☄️", "category": "calories"},
+    {"id": "burn_10000", "name": "Supernova", "description": "Brûle 10000 calories au total", "condition": "calories >= 10000", "xp_reward": 800, "icon": "💥", "category": "calories"},
+    
+    # === DURATION ===
+    {"id": "hour_total", "name": "1 Heure", "description": "Cours 1 heure au total", "condition": "duration >= 60", "xp_reward": 100, "icon": "⏱️", "category": "duration"},
+    {"id": "five_hours", "name": "5 Heures", "description": "Cours 5 heures au total", "condition": "duration >= 300", "xp_reward": 300, "icon": "⏰", "category": "duration"},
+    {"id": "ten_hours", "name": "10 Heures", "description": "Cours 10 heures au total", "condition": "duration >= 600", "xp_reward": 600, "icon": "🕐", "category": "duration"},
+    {"id": "day_runner", "name": "24 Heures", "description": "Cours 24 heures au total", "condition": "duration >= 1440", "xp_reward": 1500, "icon": "📆", "category": "duration"},
+    
+    # === SPECIAL/FUN ===
+    {"id": "streak_3", "name": "Série de 3", "description": "Cours 3 jours d'affilée", "condition": "streak >= 3", "xp_reward": 100, "icon": "🔗", "category": "special"},
+    {"id": "streak_7", "name": "Semaine Parfaite", "description": "Cours 7 jours d'affilée", "condition": "streak >= 7", "xp_reward": 300, "icon": "📅", "category": "special"},
+    {"id": "streak_30", "name": "Mois de Feu", "description": "Cours 30 jours d'affilée", "condition": "streak >= 30", "xp_reward": 1000, "icon": "🗓️", "category": "special"},
+    {"id": "weekend_warrior", "name": "Guerrier du Weekend", "description": "Cours samedi ET dimanche", "condition": "weekend_complete", "xp_reward": 100, "icon": "🦸", "category": "special"},
+    {"id": "quest_master", "name": "Maître des Quêtes", "description": "Complète 50 quêtes", "condition": "quests_completed >= 50", "xp_reward": 500, "icon": "📜", "category": "special"},
+    {"id": "quest_legend", "name": "Légende des Quêtes", "description": "Complète 200 quêtes", "condition": "quests_completed >= 200", "xp_reward": 1500, "icon": "📚", "category": "special"},
 ]
 
 def get_rank_for_level(level: int):
