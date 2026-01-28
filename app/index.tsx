@@ -1079,6 +1079,46 @@ export default function Index() {
     }
   };
 
+  // Claim quest reward
+  const claimQuestReward = async (questId: string) => {
+    try {
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      
+      const response = await fetch(`${BACKEND_URL}/api/quests/claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          device_id: deviceId.current,
+          quest_id: questId,
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Trigger dopamine feedback
+        triggerDopamineFeedback('xp', data.xp_earned);
+        
+        // Refresh progress to get updated quest status
+        fetchProgress();
+        
+        // Show level up if applicable
+        if (data.level_ups && data.level_ups.length > 0) {
+          setLevelUpData({
+            level: data.new_level,
+            rank: data.rank,
+            rankedUp: false,
+          });
+          setShowLevelUp(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error claiming quest reward:', error);
+    }
+  };
+
   // Animated styles are now using React Native's Animated API directly in the JSX
 
   if (loading) {
