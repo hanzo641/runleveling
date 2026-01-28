@@ -621,7 +621,8 @@ export default function Index() {
   useEffect(() => {
     fetchProgress();
     fetchStravaStatus();
-  }, [fetchProgress, fetchStravaStatus]);
+    fetchTrophies(); // Load trophies on startup so they show in the tab
+  }, [fetchProgress, fetchStravaStatus, fetchTrophies]);
 
   useEffect(() => {
     if (activeTab === 'history') fetchSessions();
