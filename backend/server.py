@@ -424,8 +424,13 @@ async def complete_session(data: dict):
     # Calculate progress percentage
     progress_pct = (new_current_xp / xp_for_next) * 100
     
+    # Total XP gained this session (run + trophies)
+    total_xp_earned = xp_earned + trophy_xp
+    
     return {
-        "xp_earned": xp_earned,
+        "xp_earned": total_xp_earned,  # Now includes trophy XP
+        "run_xp": xp_earned,
+        "trophy_xp": trophy_xp,
         "leveled_up": len(level_ups) > 0,
         "levels_gained": len(level_ups),
         "ranked_up": rank_changed,
