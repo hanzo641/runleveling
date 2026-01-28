@@ -1398,9 +1398,6 @@ export default function Index() {
   );
 
   // Render Trophies Tab
-  // Trophy categories for filtering
-  const [trophyFilter, setTrophyFilter] = useState<string>('all');
-  
   const TROPHY_CATEGORIES = [
     { id: 'all', name: 'Tous', icon: '🏆' },
     { id: 'sessions', name: 'Sessions', icon: '🏃' },
