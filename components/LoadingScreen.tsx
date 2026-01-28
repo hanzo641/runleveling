@@ -209,20 +209,20 @@ const styles = StyleSheet.create({
   },
   ambientGlow: {
     position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    opacity: 0.15,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    opacity: 0.08,
   },
   glowBlue: {
     backgroundColor: '#3B82F6',
-    top: 80,
-    left: -30,
+    top: 100,
+    left: 20,
   },
   glowGold: {
     backgroundColor: '#F59E0B',
-    bottom: 120,
-    right: -30,
+    bottom: 150,
+    right: 20,
   },
   mainContent: {
     flex: 1,
