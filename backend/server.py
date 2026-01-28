@@ -323,17 +323,30 @@ async def complete_session(data: dict):
     }
     sessions_collection.insert_one(session_data)
     
+    # Calculate progress percentage
+    progress_pct = (new_current_xp / xp_for_next) * 100
+    
     return {
         "xp_earned": xp_earned,
-        "new_level": new_level,
-        "current_xp": new_current_xp,
-        "xp_for_next_level": xp_for_next,
-        "level_ups": level_ups,
-        "rank": new_rank,
-        "rank_changed": rank_changed,
+        "leveled_up": len(level_ups) > 0,
+        "levels_gained": len(level_ups),
+        "ranked_up": rank_changed,
         "old_rank": old_rank if rank_changed else None,
-        "trophies": new_trophies,
-        "daily_quests": daily_quests,
+        "new_rank": new_rank,
+        "trophies_earned": new_trophies,
+        "quests_completed": [q for q in daily_quests if q.get("completed") and not q.get("claimed")],
+        "progress": {
+            "level": new_level,
+            "current_xp": new_current_xp,
+            "xp_for_next_level": xp_for_next,
+            "total_xp": new_total_xp,
+            "progress_percentage": progress_pct,
+            "rank": new_rank,
+            "next_rank": next_rank,
+            "sessions_completed": new_sessions,
+            "total_distance": new_distance,
+            "total_duration": new_duration,
+        }
     }
 
 @app.post("/api/quests/claim")
