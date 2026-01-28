@@ -29,6 +29,7 @@ import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
 import * as TaskManager from 'expo-task-manager';
 import RankAvatar from '../components/RankAvatar';
+import RankBadge from '../components/RankBadge';
 import LoadingScreen from '../components/LoadingScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
