@@ -1352,11 +1352,6 @@ export default function Index() {
   // Render Leaderboard Tab
   
   const renderLeaderboardTab = () => {
-    // Filter leaderboard by selected league
-    const filteredLeaderboard = selectedLeague 
-      ? leaderboard.filter(item => item.player_rank?.id === selectedLeague)
-      : leaderboard;
-    
     return (
       <View style={styles.tabContent}>
         <Text style={styles.sectionTitle}>🏆 Classement</Text>
@@ -1423,10 +1418,10 @@ export default function Index() {
         )}
 
         <FlatList
-          data={filteredLeaderboard}
-          keyExtractor={(item) => `${item.rank}-${item.username}`}
+          data={leaderboard}
+          keyExtractor={(item) => `${item.position}-${item.username}`}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
+          renderItem={({ item }) => (
             <View
               style={[
                 styles.leaderboardCard,
@@ -1434,17 +1429,17 @@ export default function Index() {
               ]}
             >
               <View style={styles.leaderboardRank}>
-                {item.rank <= 3 ? (
+                {item.position <= 3 ? (
                   <Text style={styles.leaderboardMedal}>
-                    {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉'}
+                    {item.position === 1 ? '🥇' : item.position === 2 ? '🥈' : '🥉'}
                   </Text>
                 ) : (
-                  <Text style={styles.leaderboardRankText}>#{item.rank}</Text>
+                  <Text style={styles.leaderboardRankText}>#{item.position}</Text>
                 )}
               </View>
 
-              <View style={[styles.leaderboardBadge, { backgroundColor: item.player_rank?.color || '#6B7280' }]}>
-                <Text style={styles.leaderboardBadgeIcon}>{item.player_rank?.icon || '🏃'}</Text>
+              <View style={[styles.leaderboardBadge, { backgroundColor: item.rank?.color || '#6B7280' }]}>
+                <Text style={styles.leaderboardBadgeIcon}>{item.rank?.icon || '🏃'}</Text>
               </View>
 
               <View style={styles.leaderboardInfo}>
@@ -1455,11 +1450,13 @@ export default function Index() {
                   {item.username} {item.is_current_user && '(Toi)'}
                 </Text>
                 <Text style={styles.leaderboardStats}>
-                  Niv. {item.level} • {item.total_distance_km || 0} km
+                  Niv. {item.level} • {item.total_xp} XP
                 </Text>
               </View>
 
-              <Text style={styles.leaderboardXp}>{item.total_xp}</Text>
+              <View style={[styles.leaderboardXpBadge, { backgroundColor: item.rank?.color || '#6B7280' }]}>
+                <Text style={styles.leaderboardXp}>{item.total_xp}</Text>
+              </View>
             </View>
           )}
           ListEmptyComponent={
