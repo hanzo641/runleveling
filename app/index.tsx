@@ -1348,8 +1348,6 @@ export default function Index() {
   );
 
   // Render Leaderboard Tab
-  // State for league filter
-  const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
   
   const renderLeaderboardTab = () => {
     // Filter leaderboard by selected league
