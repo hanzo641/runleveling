@@ -33,7 +33,8 @@ import RankBadge from '../components/RankBadge';
 import LoadingScreen from '../components/LoadingScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+// Fallback URL for EAS builds where env variables might not be available
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://run-backend-api.preview.emergentagent.com';
 
 // Background location task name
 const BACKGROUND_LOCATION_TASK = 'background-location-task';
