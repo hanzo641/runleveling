@@ -687,6 +687,110 @@ export default function Index() {
     }
   };
 
+  // Process background locations when app comes to foreground
+  const processBackgroundLocations = useCallback(async () => {
+    if (!isRunning) return;
+    
+    try {
+      const storedData = await AsyncStorage.getItem(BACKGROUND_LOCATIONS_KEY);
+      if (!storedData) return;
+      
+      const backgroundLocations = JSON.parse(storedData);
+      if (backgroundLocations.length === 0) return;
+      
+      console.log(`Processing ${backgroundLocations.length} background locations`);
+      
+      let additionalDistance = 0;
+      let additionalElevGain = 0;
+      let additionalElevLoss = 0;
+      const newPaces: number[] = [];
+      
+      // Start from last known location or first background location
+      let prevLoc = lastLocation.current || backgroundLocations[0];
+      
+      for (let i = 0; i < backgroundLocations.length; i++) {
+        const loc = backgroundLocations[i];
+        
+        // Skip if this location is before our last known location
+        if (lastLocation.current && loc.timestamp <= lastLocation.current.timestamp) {
+          continue;
+        }
+        
+        const dist = haversineDistance(
+          prevLoc.latitude,
+          prevLoc.longitude,
+          loc.latitude,
+          loc.longitude
+        );
+        
+        if (dist > 0.001 && dist < 0.5) { // Between 1m and 500m (filter GPS jumps)
+          additionalDistance += dist;
+          
+          // Calculate pace
+          const timeDiff = (loc.timestamp - prevLoc.timestamp) / 1000;
+          if (timeDiff > 0) {
+            const pace = timeDiff / dist;
+            if (pace > 0 && pace < 1800) {
+              newPaces.push(pace);
+            }
+          }
+          
+          // Elevation
+          if (loc.altitude && prevLoc.altitude) {
+            const elevDiff = loc.altitude - prevLoc.altitude;
+            if (elevDiff > 0) {
+              additionalElevGain += elevDiff;
+            } else {
+              additionalElevLoss += Math.abs(elevDiff);
+            }
+          }
+        }
+        
+        prevLoc = loc;
+      }
+      
+      // Update state with background data
+      if (additionalDistance > 0) {
+        setCurrentDistance(prev => prev + additionalDistance);
+        console.log(`Added ${additionalDistance.toFixed(3)} km from background`);
+      }
+      if (newPaces.length > 0) {
+        setPaces(prev => [...prev, ...newPaces]);
+      }
+      if (additionalElevGain > 0) {
+        setElevationGain(prev => prev + additionalElevGain);
+      }
+      if (additionalElevLoss > 0) {
+        setElevationLoss(prev => prev + additionalElevLoss);
+      }
+      
+      // Update last location to the most recent background location
+      if (backgroundLocations.length > 0) {
+        lastLocation.current = backgroundLocations[backgroundLocations.length - 1];
+      }
+      
+      // Clear stored background locations
+      await AsyncStorage.removeItem(BACKGROUND_LOCATIONS_KEY);
+      
+    } catch (error) {
+      console.error('Error processing background locations:', error);
+    }
+  }, [isRunning]);
+
+  // Listen to app state changes to process background data
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && isRunning) {
+        console.log('App came to foreground, processing background locations...');
+        processBackgroundLocations();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isRunning, processBackgroundLocations]);
+
   useEffect(() => {
     fetchProgress();
     fetchStravaStatus();
