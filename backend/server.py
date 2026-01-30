@@ -294,8 +294,17 @@ async def get_progress(device_id: str):
 @app.post("/api/session/complete")
 async def complete_session(data: dict):
     device_id = data.get("device_id")
-    duration = data.get("duration", 0)  # seconds
-    distance = data.get("distance", 0)  # km
+    
+    # Support both formats: duration (seconds) or duration_minutes + duration_seconds
+    if "duration" in data:
+        duration = data.get("duration", 0)  # seconds
+    else:
+        duration_minutes = data.get("duration_minutes", 0)
+        duration_seconds = data.get("duration_seconds", 0)
+        duration = duration_minutes * 60 + duration_seconds
+    
+    # Support both formats: distance (km) or distance_km
+    distance = data.get("distance", data.get("distance_km", 0))  # km
     
     user = users_collection.find_one({"device_id": device_id})
     if not user:
