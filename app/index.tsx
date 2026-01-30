@@ -116,6 +116,8 @@ interface Quest {
   progress: number;
   completed: boolean;
   claimed: boolean;
+  date: string;
+  icon: string;
 }
 
 interface Trophy {
