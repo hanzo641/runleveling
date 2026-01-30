@@ -134,6 +134,7 @@ interface UserProgress {
   id: string;
   device_id: string;
   username: string;
+  username_set: boolean;
   level: number;
   current_xp: number;
   xp_for_next_level: number;
@@ -143,14 +144,17 @@ interface UserProgress {
   sessions_completed: number;
   total_duration_minutes: number;
   total_distance_km: number;
+  total_distance: number;
+  total_duration: number;
   current_streak: number;
   best_streak: number;
   progress_percentage: number;
   trophies_unlocked: string[];
+  trophies_earned: Trophy[];
   daily_quests: Quest[];
   best_pace: string | null;
   notification_enabled: boolean;
-  notification_time: string;
+  notification_time: { hour: number; minute: number } | string;
 }
 
 interface SessionDetail {
