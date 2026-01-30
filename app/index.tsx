@@ -1080,17 +1080,22 @@ export default function Index() {
     if (newUsername.length < 2 || newUsername.length > 20) return;
 
     try {
-      await fetch(`${BACKEND_URL}/api/username`, {
-        method: 'PUT',
+      const response = await fetch(`${BACKEND_URL}/api/username`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           device_id: deviceId.current,
           username: newUsername,
         }),
       });
-      setShowUsernameModal(false);
-      fetchProgress();
-      fetchLeaderboard(selectedLeague);
+      const result = await response.json();
+      if (result.success) {
+        setShowUsernameModal(false);
+        fetchProgress();
+        fetchLeaderboard(selectedLeague);
+      } else {
+        console.error('Username update failed:', result.error);
+      }
     } catch (error) {
       console.error('Error updating username:', error);
     }
