@@ -125,6 +125,7 @@ interface Trophy {
   condition: string;
   xp_reward: number;
   icon: string;
+  category: string;
 }
 
 interface UserProgress {
