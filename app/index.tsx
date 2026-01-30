@@ -911,6 +911,9 @@ export default function Index() {
         await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
       }
     }
+    
+    // Clear any stored background locations
+    await AsyncStorage.removeItem(BACKGROUND_LOCATIONS_KEY);
   };
 
   // Pulse animation for running state
