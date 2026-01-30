@@ -33,7 +33,17 @@ app.add_middleware(
 # =============================================================================
 
 MONGO_URL = os.environ.get("MONGO_URL", os.environ.get("MONGODB_URL", "mongodb://localhost:27017"))
-client = MongoClient(MONGO_URL)
+
+# Lazy connection - don't block startup
+try:
+    client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000)
+    # Test connection
+    client.admin.command('ping')
+    print(f"✅ Connected to MongoDB")
+except Exception as e:
+    print(f"⚠️ MongoDB connection warning: {e}")
+    client = MongoClient(MONGO_URL, serverSelectionTimeoutMS=5000)
+
 db = client["runleveling"]
 users_collection = db["users"]
 sessions_collection = db["sessions"]
