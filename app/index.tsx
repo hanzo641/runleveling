@@ -28,6 +28,7 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
 import * as TaskManager from 'expo-task-manager';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import RankAvatar from '../components/RankAvatar';
 import RankBadge from '../components/RankBadge';
 import LoadingScreen from '../components/LoadingScreen';
@@ -38,8 +39,21 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://run-backend-
 
 // Background location task name
 const BACKGROUND_LOCATION_TASK = 'background-location-task';
+const BACKGROUND_LOCATIONS_KEY = 'background_locations';
 
-// Define background location task
+// Calculate distance between two GPS points (Haversine formula) - Needed for background task
+const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// Define background location task - stores locations for processing when app returns to foreground
 TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }: any) => {
   if (error) {
     console.error('Background location error:', error);
@@ -47,9 +61,30 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }: any) =>
   }
   if (data) {
     const { locations } = data;
-    // Location data will be processed when app comes back to foreground
-    // Store in AsyncStorage or handle here
-    console.log('Background location update:', locations?.length);
+    if (locations && locations.length > 0) {
+      try {
+        // Get existing stored locations
+        const storedData = await AsyncStorage.getItem(BACKGROUND_LOCATIONS_KEY);
+        const existingLocations = storedData ? JSON.parse(storedData) : [];
+        
+        // Add new locations with timestamp
+        const newLocations = locations.map((loc: any) => ({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          altitude: loc.coords.altitude,
+          speed: loc.coords.speed,
+          timestamp: loc.timestamp,
+        }));
+        
+        // Combine and store (keep last 1000 points max to avoid memory issues)
+        const allLocations = [...existingLocations, ...newLocations].slice(-1000);
+        await AsyncStorage.setItem(BACKGROUND_LOCATIONS_KEY, JSON.stringify(allLocations));
+        
+        console.log(`Background: stored ${newLocations.length} locations, total: ${allLocations.length}`);
+      } catch (e) {
+        console.error('Error storing background locations:', e);
+      }
+    }
   }
 });
 
