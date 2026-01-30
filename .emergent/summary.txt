@@ -1,257 +1,147 @@
 <analysis>
+
 **original_problem_statement:**
-The user initially reported a critical crash on iOS native builds. After a lengthy and complex debugging process that involved fixing package dependencies and build configurations, the user decided to reset the entire workspace to a  branch from their personal GitHub repository, which is considered a stable, non-crashing base.
+The user initially provided a comprehensive list of new features to implement on a stable codebase. These included a premium loading screen, a global UI overhaul, background execution for run tracking, rank-based leaderboards (leagues), dopamine feedback animations, and a quests/trophies system.
 
-The user then provided a new, comprehensive list of features to be implemented on this stable base.
+After implementing most of these features, the user reported that the application did not function correctly when using the internal backend hosting, specifically with quests and trophies. The user then made a critical request to create a new, production-ready FastAPI backend, 100% compatible with the Railway hosting platform, to resolve these issues. The agent has since been working on creating and debugging the deployment of this new backend on Railway.
 
-**PRODUCT REQUIREMENTS (New):**
-1.  **Premium Loading Screen:** Create a stylish, animated loading screen with a dark gradient, a centered RUNLEVELING logo that slowly zooms, and the 6 rank badges orbiting it.
-2.  **Global UI Overhaul:** Replace the flat black app background with a dark gradient, subtle depth effects, and a glow around important elements.
-3.  **Background Execution:** Ensure the run tracking continues to work even when the phone screen is locked, using proper Expo background task APIs.
-4.  **Rank-Based Leaderboards (Leagues):** Rework the global leaderboard into separate leagues for each rank (Débutant, Jogger, etc.).
-5.  **Dopamine Feedback:** Enhance the user experience with micro-animations (scale, glow, pulse) for events like gaining XP, leveling up, or changing rank.
-6.  **Quests & Trophies:** Introduce daily quests and a system for earning trophies.
+**PRODUCT REQUIREMENTS (current focus):**
+1.  **Railway-Compatible Backend:** Create a standalone FastAPI backend that includes all existing application logic (users, progress, sessions, leaderboards, quests, trophies).
+2.  **Strict Deployment Constraints:**
+    *   Must be deployable on Railway without Docker.
+    *   Must listen on the  environment variable.
+    *   Must have  and  endpoints.
+    *   Must use a  environment variable for database connection.
+    *   Must have CORS enabled for all origins.
+3.  **Resolve Deployment Crashes:** The primary goal is to fix the recurring crashes on Railway, which prevent the backend service from starting.
 
 **User's preferred language**: French (français). The next agent MUST respond in French.
 
 **what currently exists?**
-The workspace has been completely reset by checking out the  branch from the user's public GitHub repository. This new base is an Expo/React Native app with a FastAPI backend. The agent has re-installed all dependencies and re-created the necessary  files.
-
-Work has begun on the new feature requests:
-- A new  component has been created, and  has been installed. The implementation is partially complete with a gradient background and some glow effects, but the core animations (orbiting badges, logo zoom) are not yet working as intended.
-- The main application background has been successfully updated from a flat color to a .
-- The packages  and  have been installed to prepare for background location tracking. The agent has started adding the necessary task definitions and modifying the location tracking functions.
+-   A full-featured Expo (React Native) application in . The UI/UX has been significantly enhanced with custom rank images, a progress circle around the rank avatar, improved popups, and refined quest/trophy tabs.
+-   A local FastAPI backend in  which contains all the application logic and works in the local environment.
+-   A new, separate, Railway-ready backend located in . This directory contains  (a copy of the local version, with modifications for deployment), , , and .
 
 **Last working item**:
--   **Last item agent was working:** The agent was implementing the Leagues feature for the leaderboards. It had located the  function in  and started modifying it to introduce a new UI with filters for each rank.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** N (Work was in progress, no testing was performed on this specific change).
--   **Which testing method agent to use?** manual testing by screenshot tool
--   **User Testing Done:** N
+-   **Last item agent was working:** Debugging a persistent deployment crash on Railway. The agent hypothesized that the  connection was blocking the application startup and causing a timeout. To fix this, the agent modified  to implement a lazy non-blocking MongoDB connection within a  block.
+-   **Status:** USER VERIFICATION PENDING
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Manual testing. The agent needs to ask the user to check the  endpoint of their Railway deployment URL and to inspect the Deploy Logs on the Railway dashboard.
+-   **User Testing Done:** N (The user provided a screenshot of a successful *build* log, but has not confirmed if the service is *running* and accessible.)
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P1) Incomplete Backend Server File**
-    -   **Description:** When the agent checked out the user's  branch, the  file was missing. To prevent the backend service from failing, the agent created a minimal placeholder  file with a basic  endpoint. This placeholder is likely missing most of the required backend logic (session completion, Strava integration, etc.).
-    -   **Attempted fixes:** A minimal placeholder was created to ensure the service could run.
+-   **Issue 1: (P0) Railway Backend Deployment is Crashing or Unresponsive**
+    -   **Description:** The backend service deployed on Railway fails to start, resulting in HTTP 502/503 errors. The logs were often empty, indicating a pre-boot failure. The agent has attempted several fixes related to the start command, file structure, and dependencies. The latest attempt involves a non-blocking database connection.
+    -   **Attempted fixes:**
+        1.  Corrected  command from  to .
+        2.  Advised user to set  in Railway UI to .
+        3.  Advised user to move backend files to the git repository root and clear the  setting in Railway.
+        4.  **Last fix:** Modified  to prevent the MongoDB connection from blocking server startup.
     -   **Next debug checklist:**
-        1.  Ask the user to provide the correct and complete  file from their stable  branch.
-        2.  If the user doesn't have it, the backend logic will need to be re-implemented based on the frontend's API calls.
-    -   **Why fix this issue and what will be achieved with the fix?** The application's core functionality, such as saving runs and tracking progress, depends on a complete backend. The current placeholder only allows the app to load without crashing.
+        1.  Ask the user to confirm the status of the latest deployment on Railway.
+        2.  Specifically, ask the user to visit  and report the result.
+        3.  Ask the user to check the **Deploy Logs** (not Build Logs) in Railway for any new error messages if the endpoint is not working.
+        4.  If it still fails, investigate the  variable in Railway to ensure it's correctly linked to the MongoDB service.
+    -   **Why fix this issue and what will be achieved with the fix?** This is the main blocker. The entire application's functionality depends on a stable, running backend. Fixing this will allow the user to have a production-ready application.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
+    -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue:** None.
+    -   **Blocked on other issue:** None. This is the primary blocker.
 
 **In progress Task List**:
--   **Task 1: (P0) Finalize Premium Loading Screen**
-    -   **Description:** Implement the user's vision for the animated loading screen.
-    -   **Where to resume:** The  component exists but has issues. The glow effects were hiding the content, and the orbiting badge animation was not successfully implemented. The agent needs to fix the layering (z-index) and implement the  logic for the orbiting badges and the logo zoom.
-    -   **What will be achieved with this?** A professional, engaging loading experience that matches modern mobile game standards.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** frontend
-    -   **Blocked on something:** None.
-
--   **Task 2: (P1) Implement Background Location Tracking**
-    -   **Description:** Allow the app to continue tracking a user's run when the screen is locked.
-    -   **Where to resume:** The necessary packages are installed, and a background task () is defined in . The  and  functions have been modified. The implementation needs to be tested and verified on a real device, and permissions in  must be correctly configured for background location access.
-    -   **What will be achieved with this?** A core feature for any running app, preventing data loss if the user's phone locks during a session.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** frontend (requires native build/Expo Go on a device)
-    -   **Blocked on something:** None.
+- None. All feature development is paused pending the resolution of the Railway deployment issue.
 
 **Upcoming and Future Tasks**
-- **P1: Complete Rank-Based Leaderboards (Leagues) (Phase 4):** Finish the UI and logic in  to allow users to view leaderboards filtered by their current rank/league. This will also require backend support to filter the data.
-- **P2: Implement Dopamine Feedback Animations (Phase 5):** Add micro-animations for key progression events like gaining XP, leveling up, and changing rank to make the experience more rewarding.
-- **P3: Implement UI for Daily Quests & Trophies (Phase 7):** The data structures (, ) exist in , but the UI tabs for them need to be built out to display available quests, progress, and earned trophies.
+- **P1: Finalize Premium Loading Screen (Phase 1 from original PRD):** Implement the animated loading screen as described in the original requirements ( exists but is not fully implemented or used).
+- **P2: Full Test of Background Location Tracking (Phase 3):** The permissions were added, but the feature needs to be thoroughly tested on a real device to ensure it works when the screen is locked.
+- **P3: Connect Expo App to Deployed Railway Backend:** Once the Railway backend is stable, update the  in the Expo app's  file to point to the new production URL and test end-to-end functionality.
 
 **Completed work in this session**
-- **Project Reset:** Successfully switched the entire workspace to the user's  branch from GitHub.
-- **Dependency Management:** Re-installed all npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-npm install <foo>  add the <foo> dependency to your project
-npm test           run this project's tests
-npm run <foo>      run the script named <foo>
-npm <command> -h   quick help on <command>
-npm -l             display usage info for all commands
-npm help <term>    search for help on <term>
-npm help npm       more involved overview
-
-All commands:
-
-    access, adduser, audit, bugs, cache, ci, completion,
-    config, dedupe, deprecate, diff, dist-tag, docs, doctor,
-    edit, exec, explain, explore, find-dupes, fund, get, help,
-    help-search, hook, init, install, install-ci-test,
-    install-test, link, ll, login, logout, ls, org, outdated,
-    owner, pack, ping, pkg, prefix, profile, prune, publish,
-    query, rebuild, repo, restart, root, run-script, sbom,
-    search, set, shrinkwrap, star, stars, start, stop, team,
-    test, token, uninstall, unpublish, unstar, update, version,
-    view, whoami
-
-Specify configs in the ini-formatted file:
-    /root/.npmrc
-or on the command line via: npm <command> --key=value
-
-More configuration info: npm help config
-Configuration fields: npm help 7 config
-
-npm@10.8.2 /usr/lib/node_modules/npm and 
-Usage:   
-  pip <command> [options]
-
-Commands:
-  install                     Install packages.
-  lock                        Generate a lock file.
-  download                    Download packages.
-  uninstall                   Uninstall packages.
-  freeze                      Output installed packages in requirements format.
-  inspect                     Inspect the python environment.
-  list                        List installed packages.
-  show                        Show information about installed packages.
-  check                       Verify installed packages have compatible dependencies.
-  config                      Manage local and global configuration.
-  search                      Search PyPI for packages.
-  cache                       Inspect and manage pip's wheel cache.
-  index                       Inspect information available from package indexes.
-  wheel                       Build wheels from your requirements.
-  hash                        Compute hashes of package archives.
-  completion                  A helper command used for command completion.
-  debug                       Show information useful for debugging.
-  help                        Show help for commands.
-
-General Options:
-  -h, --help                  Show help.
-  --debug                     Let unhandled exceptions propagate outside the
-                              main subroutine, instead of logging them to
-                              stderr.
-  --isolated                  Run pip in an isolated mode, ignoring
-                              environment variables and user configuration.
-  --require-virtualenv        Allow pip to only run in a virtual environment;
-                              exit with an error otherwise.
-  --python <python>           Run pip with the specified Python interpreter.
-  -v, --verbose               Give more output. Option is additive, and can be
-                              used up to 3 times.
-  -V, --version               Show version and exit.
-  -q, --quiet                 Give less output. Option is additive, and can be
-                              used up to 3 times (corresponding to WARNING,
-                              ERROR, and CRITICAL logging levels).
-  --log <path>                Path to a verbose appending log.
-  --no-input                  Disable prompting for input.
-  --keyring-provider <keyring_provider>
-                              Enable the credential lookup via the keyring
-                              library if user input is allowed. Specify which
-                              mechanism to use [auto, disabled, import,
-                              subprocess]. (default: auto)
-  --proxy <proxy>             Specify a proxy in the form
-                              scheme://[user:passwd@]proxy.server:port.
-  --retries <retries>         Maximum attempts to establish a new HTTP
-                              connection. (default: 5)
-  --timeout <sec>             Set the socket timeout (default 15 seconds).
-  --exists-action <action>    Default action when a path already exists:
-                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
-  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
-                              even though it does not have valid or any HTTPS.
-  --cert <path>               Path to PEM-encoded CA certificate bundle. If
-                              provided, overrides the default. See 'SSL
-                              Certificate Verification' in pip documentation
-                              for more information.
-  --client-cert <path>        Path to SSL client certificate, a single file
-                              containing the private key and the certificate
-                              in PEM format.
-  --cache-dir <dir>           Store the cache data in <dir>.
-  --no-cache-dir              Disable the cache.
-  --disable-pip-version-check
-                              Don't periodically check PyPI to determine
-                              whether a new version of pip is available for
-                              download. Implied with --no-index.
-  --no-color                  Suppress colored output.
-  --use-feature <feature>     Enable new functionality, that may be backward
-                              incompatible.
-  --use-deprecated <feature>  Enable deprecated functionality, that will be
-                              removed in the future.
-  --resume-retries <resume_retries>
-                              Maximum attempts to resume or restart an
-                              incomplete download. (default: 5) dependencies for the new codebase.
-- **Environment Setup:** Re-created  files for the frontend and backend.
-- **Critical Backend Fix:** Created a placeholder  to allow the backend service to run after discovering the file was missing.
-- **UI Improvement:** Implemented a global dark gradient background for the entire application, replacing the previous flat black background.
-- **Initial Feature Scaffolding:**
-    - Created a new  component.
-    - Installed , , and .
-    - Started implementing the logic for background location tracking.
-
-**Earlier issues found/mentioned but not fixed**
-- The implementation of the **Premium Loading Screen** is incomplete and buggy. The agent struggled with the animations and layering, temporarily removing features to debug. This task needs to be revisited and completed correctly.
-
-**Known issue recurrence from previous fork**
-- **iOS Native Crash:** The majority of the previous session was spent debugging a persistent crash on native iOS builds. The root causes were identified as package dependency mismatches and main thread blocking. Although the dependencies have been updated and the codebase was reset to a stable branch, the next agent must be extremely cautious. Any new complex animations or heavy processing at startup could re-introduce this watchdog timeout crash.
+- **Feature - Rank-Based Leaderboards (Leagues):** Implemented frontend UI and integrated with the backend endpoint to filter leaderboards by rank.
+- **Feature - Custom Rank Images:** Replaced default rank icons with user-provided PNGs in all relevant locations (home screen avatar, leaderboard lists).
+- **Feature - Quest & Trophy System Enhancements:**
+    - Added many new quests and trophies to the backend.
+    - Implemented a Claim Reward button for quests in the UI.
+    - Redesigned the Trophies tab with category filters and now shows locked trophies in a grayed-out state.
+- **Feature - UI/UX Improvements:**
+    - Added a circular progress bar around the rank avatar to show XP progress towards the next rank.
+    - Clarified the one-time username change process with an improved UI and backend flag ().
+    - Enhanced the Level Up popup with motivational messages.
+- **Bug Fixes:**
+    - Fixed an issue where minimal XP was gained in web preview.
+    - Fixed a bug where the post-run summary modal was not appearing due to a backend/frontend data mismatch.
+    - Fixed a bug where XP from unlocking trophies was not being awarded.
+    - Fixed a critical crash in the History tab caused by a data mismatch.
+    - Fixed a React hook rendering error in the Trophies tab.
+    - Resolved an issue where trophies showed 0/0 by loading them at app startup and fixing an environment variable path issue.
+- **Backend for Railway:** Created a new  directory with a Railway-compatible structure and iteratively debugged deployment issues.
 
 **Code Architecture**
-After the M	package-lock.json, the project structure has changed. The  and  folders have been removed, and all files are now in the  root.
 
 
 **Key Technical Concepts**
-- **Frontend:** React Native, Expo, , , , React Native  API.
-- **Backend:** FastAPI, Python, MongoDB.
-- **Architecture:** The project has been reset to a state where the frontend code is a single, large  file. A new  component has been added. The backend is a single  file, which is currently just a placeholder.
+- **Frontend:** React Native, Expo, React Hooks,  (for progress circle).
+- **Backend:** FastAPI, Python, MongoDB. The logic is duplicated between  and .
+- **Deployment:** **Railway**. The project is pivoting to a Railway-native deployment for the backend.
 
 **key DB schema**
-- **users:** , , ,  (sub-document)
-- **sessions:** , , , , , 
+- **users:** , , ,  (boolean),  (sub-document: level, xp, rank etc.), , ,  (sub-document: total_distance, etc.)
+- **sessions:** , , , , , .
 
 **All files of reference**
-- : The monolithic file containing the entire application logic. It has been modified to add a gradient background and start the background task implementation.
-- : A new file created to house the logic for the animated loading screen. It is currently in a partially working state.
-- : A critical file that was missing and has been replaced by a minimal placeholder. It needs to be replaced with the correct, full version.
+- : The latest version of the backend, modified for Railway deployment. This is the most critical file.
+- : Defines the start command for Railway.
+- : Python dependencies.
+- : The monolithic frontend file where all recent UI features and bug fixes were implemented.
+- : Component updated to display a progress circle around the rank image.
 
 **Areas that need refactoring**:
--  is over 3600 lines long and contains UI, state management, API calls, and business logic for every feature. It is critically in need of being broken down into smaller, reusable components (e.g., , , ) and hooks (e.g., , ).
+- : This file is extremely large and brittle. It urgently needs to be broken down into smaller components for each screen/tab (, , , etc.) and custom hooks for logic (, , etc.).
+- The backend logic is duplicated in  and . Once the Railway deployment is stable, the old  directory should probably be removed to avoid confusion.
 
 **key api endpoints**
-- : Fetches user progress (this is the only endpoint in the current placeholder ).
-- *Presumably Missing:* , , Strava endpoints, etc.
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+-  (in )
 
 **Critical Info for New Agent**
-- **Project Base is New:** You are working on a fresh checkout from the user's  branch. The previous work and files are gone.
-- **Backend is Incomplete:** The  is a placeholder. You must get the real file from the user or re-implement the backend logic. Do not assume the backend is functional beyond serving the basic progress data.
-- **iOS Stability is Fragile:** The previous session was dominated by a native iOS crash. Be extremely mindful of performance, especially at startup. Avoid blocking the main thread. Use  for heavy tasks and keep animations efficient.
-- **User's PRD is the Goal:** The user's message (#467) is now the primary source of truth for all tasks. Follow the objectives listed there in a phased approach.
+- **PRIORITY #1 IS RAILWAY:** Do not work on any new features. Your entire focus must be on confirming that the Railway deployment is stable and running. All user communication should be directed at solving this problem.
+- **GUIDE THE USER:** The user is actively involved in the deployment process. You need to provide clear, simple instructions for them to check logs and settings on the Railway dashboard.
+- **VERIFY THE LAST FIX:** The last action was to push a  with a non-blocking MongoDB connection. You must start by asking the user to verify if this fixed the crash.
+- **USER'S URL:** The user's Railway backend URL is . Use this to instruct them on what endpoints to test (e.g., ).
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Asks to continue with the next features. (PENDING - Agent was working on it)
-2.  **User:** Checks if the app is complete with the latest images or if it's the hello world version. (RESOLVED)
-3.  **User:** Asks how to cancel the stuck build. (RESOLVED)
-4.  **User:** Reports the new build has been stuck for 73 minutes. (RESOLVED)
-5.  **User:** Asks to switch to the  branch on GitHub as the new stable base. (RESOLVED)
-6.  **User:** Provides a massive, detailed list of new features (new PRD). (PENDING)
-7.  **User:** Confirms go for the agent to start working on the new plan. (RESOLVED)
-8.  **User:** tu peux reprendre (you can continue). (RESOLVED)
-9.  **User:** Provides the GitHub repository URL. (RESOLVED)
-10. **User:** Confirms the repository is now public. (RESOLVED)
+- **User:** Shares a screenshot showing the  is now empty on Railway. (RESOLVED)
+- **User:** Asks what to do, as they downloaded a ZIP and don't know how to use Git. (RESOLVED - Agent explained how to upload via web UI).
+- **User:** Asks ? after being told to push to GitHub. (RESOLVED)
+- **User:** States that the  files are at the root on their PC but not on GitHub. (RESOLVED - Agent identified user was not using git correctly).
+- **User:** Shares screenshot of Railway settings (Root Directory is ). (RESOLVED - Agent identified this as an issue).
+- **User:** Shares screenshot of empty deploy logs. (IN PROGRESS)
+- **User:** Why favicon? after seeing a 404 for it in the logs. (RESOLVED - Agent explained it's a normal browser request).
+- **User:** Shows a screenshot of the successful build log. (IN PROGRESS - Agent needs to clarify that build success != deploy success).
+- **User:** Shows screenshot of empty Deploy Logs. (IN PROGRESS)
+- **User:** States there's nothing in the Deploy Logs. (IN PROGRESS - This is the core of the debugging issue).
 
 **Project Health Check:**
-- **Broken:** The backend is non-functional beyond a single placeholder endpoint. Core features like saving runs will not work.
-- **Mocked:** The  file is effectively a mock.
+- **Broken:** The production backend on Railway is not running, which blocks the entire application from being used in a production-like environment. The local environment is functional.
+- **Mocked:** N/A.
 
 **3rd Party Integrations**
-- : For GPS tracking.
-- : For push notifications.
-- : For UI gradients.
--  / : For background tasks.
-- **Strava API:** Backend logic is currently missing but was present in a previous version of the codebase.
+- **Railway:** For backend hosting.
+- **MongoDB:** Database, hosted via Railway's addon service.
 
 **Testing status**
 - Testing agent used after significant changes: NO
-- Troubleshoot agent used after agent stuck in loop: YES (in the previous, now-discarded, session)
+- Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: None.
-- Known regressions: The entire backend logic is missing compared to the state before the M	package-lock.json.
+- Known regressions: The production backend is non-functional.
 
 **What agent forgot to execute**
-- The agent did not ask the user for the complete  file after discovering it was missing from the git repository. It created a placeholder to proceed, but this leaves the backend in a broken state.
-- The implementation of the animated loading screen was left in a half-finished state. The agent moved on to the next task after getting stuck on the animation logic.
+- The agent intended to add a call to  in the  function to activate the new XP gain animations but appears to have moved on without doing so. This is a minor pending implementation detail compared to the deployment issue.
 
 </analysis>
