@@ -35,7 +35,7 @@ import LoadingScreen from '../components/LoadingScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Fallback URL for EAS builds where env variables might not be available
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://run-backend-api.preview.emergentagent.com';
+const BACKEND_URL = 'https://run-backend-api.preview.emergentagent.com';
 
 // Background location task name
 const BACKGROUND_LOCATION_TASK = 'background-location-task';
