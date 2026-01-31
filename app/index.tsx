@@ -326,7 +326,7 @@ export default function Index() {
   useEffect(() => {
   Alert.alert(
     'DEBUG TESTFLIGHT',
-    Device ID:\n${deviceId.current}\n\nBackend:\n${BACKEND_URL}
+    `Device ID:\n${deviceId.current}\n\nBackend:\n${BACKEND_URL}`
   );
 }, []);
   // Strava state
