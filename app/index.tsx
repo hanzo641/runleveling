@@ -35,8 +35,8 @@ import LoadingScreen from '../components/LoadingScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Fallback URL for EAS builds where env variables might not be available
-const BACKEND_URL = 'https://run-backend-api.preview.emergentagent.com';
-
+export const BACKEND_URL = 'https://run-backend-api.preview.emergentagent.com';
+console.log('🔥 BACKEND_URL USED:', BACKEND_URL);
 // Background location task name
 const BACKGROUND_LOCATION_TASK = 'background-location-task';
 const BACKGROUND_LOCATIONS_KEY = 'background_locations';
@@ -323,7 +323,12 @@ export default function Index() {
   const [newUsername, setNewUsername] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState('08:00');
-
+  useEffect(() => {
+  Alert.alert(
+    'DEBUG TESTFLIGHT',
+    Device ID:\n${deviceId.current}\n\nBackend:\n${BACKEND_URL}
+  );
+}, []);
   // Strava state
   const [stravaStatus, setStravaStatus] = useState<StravaStatus>({ connected: false, athlete_name: null, athlete_id: null });
   const [stravaSyncing, setStravaSyncing] = useState(false);
